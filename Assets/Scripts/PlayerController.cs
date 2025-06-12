@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -25,28 +24,42 @@ public class PlayerController : MonoBehaviour
     public bool isGrounded;
     private Vector2 moveInput;
 
-    InputAction movementAction;
-    InputAction jumpAction;
+    PlayerInput playerInput;
+    InputAction lookAction;
+    InputAction moveAction;
+
+    public bool isUsingGamepad = false;
 
     void Start()
     {
+        playerInput = GetComponent<PlayerInput>();
         rb = GetComponent<Rigidbody2D>();
-        movementAction = InputSystem.actions.FindAction("Move");
-        jumpAction = InputSystem.actions.FindAction("Jump");
+        lookAction = InputSystem.actions.FindAction("Look");
+        moveAction = InputSystem.actions.FindAction("Move");
     }
+
+    public void OnLook() {
+     if (playerInput.currentControlScheme == "Gamepad")
+        {
+            isUsingGamepad = true;
+        } else
+        {
+            isUsingGamepad = false;
+        }
+    }
+
+
 
     void Update()
     {
-        // Get movement input
-        moveInput = movementAction.ReadValue<Vector2>();
-
-        // Jump input
-        if (jumpAction.triggered && (isGrounded || grappleGun.isGrappling))
+        if (isUsingGamepad)
         {
-            if (grappleGun.isGrappling)
-            {
-                grappleGun.StopGrapple(); // Stop grappling if jumping
-            }
+            moveInput = lookAction.ReadValue<Vector2>();
+
+        } else
+        {
+            moveInput = moveAction.ReadValue<Vector2>();
+
         }
 
     }

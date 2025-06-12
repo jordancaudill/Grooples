@@ -41,6 +41,8 @@ public class GrappleGun : MonoBehaviour
     [SerializeField] private float minDistance = 1f;
 
     InputAction grapplingHookAction;
+    InputAction lookAction;
+
 
     [Header("Launching:")]
     [SerializeField] private float launchSpeed = 1;
@@ -62,6 +64,8 @@ public class GrappleGun : MonoBehaviour
     private void Start()
     {
         grapplingHookAction = InputSystem.actions.FindAction("GrapplingHook");
+        lookAction = InputSystem.actions.FindAction("Look");
+
         m_springJoint2D.enabled = false;
         m_springJoint2D.autoConfigureDistance = false;
         m_springJoint2D.distance = hangDistance;
@@ -81,10 +85,9 @@ public class GrappleGun : MonoBehaviour
 
     }
 
-    // Get the normalized direction of the tongue towards the mouse position
     private Vector2 GetNormalizedTongueDirection()
     {
-        return (GetMousePos() - (Vector2)transform.position).normalized;
+        return (GetLookPos() - (Vector2)transform.position).normalized;
     }
 
     // Get the target point for the tongue at the given distance (could be maxDistance or minDistance)
@@ -119,14 +122,24 @@ public class GrappleGun : MonoBehaviour
 
     }
 
-    private Vector2 GetMousePos()
+    private Vector2 GetLookPos()
     {
-        return m_camera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+        if (m_player.isUsingGamepad)
+        {             
+            Vector2 direction = lookAction.ReadValue<Vector2>();
+            return (Vector2)transform.position + direction.normalized * maxDistance;
+        }
+        else
+        {
+            return m_camera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+
+        }
+
     }
 
     void StartGrapple()
     {
-        Vector2 distanceVector = GetMousePos() - (Vector2)transform.position;
+        Vector2 distanceVector = GetLookPos() - (Vector2)transform.position;
         RaycastHit2D _hit = Physics2D.Raycast(transform.position, distanceVector.normalized, maxDistance, ~groundLayer);
         if (_hit.transform != null)
         {
