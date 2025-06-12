@@ -48,7 +48,9 @@ public class GrappleGun : MonoBehaviour
     private Vector2 tongueTarget;
     private Vector2 grapplePoint;
     public bool isGrappling = false;
-    public bool isShooting = false;
+
+    public float grappleCooldown = 0.25f;
+    private float lastGrappleTime = -10f;
 
     // https://bitbucket.org/Vespper/grappling-hook/src/master/GrappleRope
 
@@ -85,7 +87,7 @@ public class GrappleGun : MonoBehaviour
 
     private void CheckGrappleHookAction()
     {
-        if (grapplingHookAction.WasPressedThisFrame())
+        if (grapplingHookAction.WasPressedThisFrame() && Time.time - lastGrappleTime >= grappleCooldown)
         {
             StartGrapple();
         }
@@ -116,12 +118,9 @@ public class GrappleGun : MonoBehaviour
 
     void StartGrapple()
     {
-        print("Grapple Started");
-        isShooting = true;
         m_lineRenderer.positionCount = precision;
         Vector2 distanceVector = GetMousePos() - (Vector2)transform.position;
         RaycastHit2D _hit = Physics2D.Raycast(transform.position, distanceVector.normalized, maxDistance, ~groundLayer);
-
         if (_hit.transform != null)
         {
             OnGrappleHit(_hit);
@@ -153,6 +152,7 @@ public class GrappleGun : MonoBehaviour
             straightLine = false;
             tongueTarget = GetTargetPointAtDistance(minDistance);
             isGrappling = false;
+            lastGrappleTime = Time.time;
 
         }
     }
