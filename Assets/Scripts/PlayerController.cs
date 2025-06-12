@@ -66,14 +66,7 @@ public class PlayerController : MonoBehaviour
             isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 
             // Apply horizontal movement
-            if (isGrounded)
-            {
-                rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
-            }
-            else
-            {
-                rb.AddForce(new Vector2(moveInput.x * moveSpeed, 0), ForceMode2D.Force);
-            }
+            rb.AddForce(new Vector2(moveInput.x * moveSpeed, 0), ForceMode2D.Force);
 
         }
 
