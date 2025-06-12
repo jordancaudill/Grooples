@@ -106,7 +106,7 @@ public class GrappleGun : MonoBehaviour
         {
             StartGrapple();
         }
-        else if (grapplingHookAction.WasReleasedThisFrame())
+        else if (!grapplingHookAction.IsPressed())
         {
             StopGrapple();
         }

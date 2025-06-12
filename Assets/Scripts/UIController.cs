@@ -1,11 +1,15 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class UIController : MonoBehaviour
 {
 
     public GameObject levelPanel;
-    public GameObject pauseCanvas;
+    public GameObject pauseCanvas; 
+    public GameObject mainMenuButtons;
+    public GameObject playButton;
+    public GameObject level1Button;
 
     InputAction pauseAction;
 
@@ -42,11 +46,20 @@ public class UIController : MonoBehaviour
     public void ShowLevelPanel()
     {
         levelPanel.SetActive(true);
+        mainMenuButtons.SetActive(false);
+        EventSystem.current.SetSelectedGameObject(null);
+        EventSystem.current.SetSelectedGameObject(level1Button.gameObject);
+
     }
 
     public void HideLevelPanel()
     {
         levelPanel.SetActive(false);
+        mainMenuButtons.SetActive(true);
+        EventSystem.current.SetSelectedGameObject(null);
+        EventSystem.current.SetSelectedGameObject(playButton.gameObject);
+
+
     }
 
     public void LoadScene(string sceneName)
@@ -67,6 +80,7 @@ public class UIController : MonoBehaviour
         Time.timeScale = 0;
         pauseCanvas.SetActive(true);
         isPaused = true;
+
     }
 
     public void ExitGame()
