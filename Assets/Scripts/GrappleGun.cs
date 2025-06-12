@@ -7,6 +7,7 @@ public class GrappleGun : MonoBehaviour
 
     [Header("General References:")]
     public LineRenderer m_lineRenderer;
+    public PlayerController m_player;
 
     [Header("General Settings:")]
     [SerializeField] private int precision = 40;
@@ -45,10 +46,13 @@ public class GrappleGun : MonoBehaviour
     [SerializeField] private float launchSpeed = 1;
     [SerializeField] private float hangDistance = 2f;
 
+
     private Vector2 tongueTarget;
     private Vector2 grapplePoint;
     public bool isGrappling = false;
 
+    public float jumpForce = 500f;
+    public float minJumpDistance = 2f;
     public float grappleCooldown = 0.25f;
     private float lastGrappleTime = -10f;
 
@@ -59,7 +63,11 @@ public class GrappleGun : MonoBehaviour
     {
         grapplingHookAction = InputSystem.actions.FindAction("GrapplingHook");
         m_springJoint2D.enabled = false;
+        m_springJoint2D.autoConfigureDistance = false;
+        m_springJoint2D.distance = hangDistance;
+        m_springJoint2D.frequency = launchSpeed;
         m_lineRenderer.positionCount = precision;
+
 
     }
 
@@ -93,7 +101,7 @@ public class GrappleGun : MonoBehaviour
         }
         else if (grapplingHookAction.IsPressed() && isGrappling)
         {
-            UpdateGrapple();
+            //UpdateGrapple();
         }
         else if (grapplingHookAction.WasReleasedThisFrame())
         {
@@ -118,7 +126,6 @@ public class GrappleGun : MonoBehaviour
 
     void StartGrapple()
     {
-        m_lineRenderer.positionCount = precision;
         Vector2 distanceVector = GetMousePos() - (Vector2)transform.position;
         RaycastHit2D _hit = Physics2D.Raycast(transform.position, distanceVector.normalized, maxDistance, ~groundLayer);
         if (_hit.transform != null)
@@ -131,16 +138,6 @@ public class GrappleGun : MonoBehaviour
         }
 
     }
-
-    public void UpdateGrapple()
-    {
-        m_springJoint2D.autoConfigureDistance = false;
-        m_springJoint2D.connectedAnchor = grapplePoint;
-        m_springJoint2D.distance = hangDistance;
-        m_springJoint2D.frequency = launchSpeed;
-        m_springJoint2D.enabled = true;
-    }
-
 
     public void StopGrapple()
     {
@@ -160,13 +157,29 @@ public class GrappleGun : MonoBehaviour
 
     void OnGrappleHit(RaycastHit2D _hit)
     {
+
         moveTime = 0;
         waveSize = StartWaveSize;
         straightLine = false;
-        isGrappling = true;
-        grapplePoint = _hit.point;
-        tongueTarget = grapplePoint;
-        m_lineRenderer.positionCount = precision;
+        tongueTarget = _hit.point;
+
+        float distance = Vector2.Distance(_hit.point, transform.position);
+
+        if (m_player.isGrounded && distance <= minJumpDistance)
+        {
+            // If the player is grounded and the distance is less than the minimum, do not grapple
+            Vector2 distanceVector = (Vector2)transform.position - _hit.point;
+            m_rigidbody.AddForce(distanceVector.normalized * jumpForce, ForceMode2D.Force);
+            grapplePoint = transform.position;
+        }
+        else
+        {
+            isGrappling = true;
+            grapplePoint = _hit.point;
+            m_springJoint2D.connectedAnchor = grapplePoint;
+            m_springJoint2D.enabled = true;
+
+        }
 
     }
 
@@ -178,7 +191,6 @@ public class GrappleGun : MonoBehaviour
         isGrappling = false;
         tongueTarget = GetTargetPointAtDistance(maxDistance);
         grapplePoint = tongueTarget;
-        m_lineRenderer.positionCount = precision;
 
     }
 
@@ -216,7 +228,6 @@ public class GrappleGun : MonoBehaviour
 
     void DrawTongueWaves()
     {
-        m_lineRenderer.positionCount = precision;
         Vector2 grappleDistanceVector = tongueTarget - (Vector2)transform.position;
 
         for (int i = 0; i < precision; i++)

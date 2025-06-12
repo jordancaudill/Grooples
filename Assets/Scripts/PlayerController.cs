@@ -22,7 +22,7 @@ public class PlayerController : MonoBehaviour
 
     private Rigidbody2D rb;
 
-    private bool isGrounded;
+    public bool isGrounded;
     private Vector2 moveInput;
 
     InputAction movementAction;
@@ -43,7 +43,6 @@ public class PlayerController : MonoBehaviour
         // Jump input
         if (jumpAction.triggered && (isGrounded || grappleGun.isGrappling))
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             if (grappleGun.isGrappling)
             {
                 grappleGun.StopGrapple(); // Stop grappling if jumping
