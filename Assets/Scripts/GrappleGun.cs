@@ -102,10 +102,6 @@ public class GrappleGun : MonoBehaviour
         {
             StartGrapple();
         }
-        else if (grapplingHookAction.IsPressed() && isGrappling)
-        {
-            //UpdateGrapple();
-        }
         else if (grapplingHookAction.WasReleasedThisFrame())
         {
             StopGrapple();
@@ -125,7 +121,7 @@ public class GrappleGun : MonoBehaviour
     private Vector2 GetLookPos()
     {
         if (m_player.isUsingGamepad)
-        {             
+        {
             Vector2 direction = lookAction.ReadValue<Vector2>();
             return (Vector2)transform.position + direction.normalized * maxDistance;
         }
