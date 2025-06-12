@@ -8,6 +8,7 @@ public class GrappleGun : MonoBehaviour
     [Header("General References:")]
     public LineRenderer m_lineRenderer;
     public PlayerController m_player;
+    public UIController m_ui;
 
     [Header("General Settings:")]
     [SerializeField] private int precision = 40;
@@ -65,7 +66,9 @@ public class GrappleGun : MonoBehaviour
     {
         grapplingHookAction = InputSystem.actions.FindAction("GrapplingHook");
         lookAction = InputSystem.actions.FindAction("Look");
-
+        tongueTarget = transform.position;
+        grapplePoint = transform.position;
+        isGrappling = false;
         m_springJoint2D.enabled = false;
         m_springJoint2D.autoConfigureDistance = false;
         m_springJoint2D.distance = hangDistance;
@@ -77,12 +80,13 @@ public class GrappleGun : MonoBehaviour
 
     private void Update()
     {
-
-        moveTime += Time.deltaTime;
-        CheckGrappleHookAction();
-        UpdateTongueTarget();
-        DrawTongue();
-
+        if (!m_ui.isPaused)
+        {
+            moveTime += Time.deltaTime;
+            CheckGrappleHookAction();
+            UpdateTongueTarget();
+            DrawTongue();
+        }
     }
 
     private Vector2 GetNormalizedTongueDirection()
