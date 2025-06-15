@@ -39,6 +39,9 @@ public class PlayerController : NetworkBehaviour
 
         spawnPoint = GameObject.Find("Spawn").transform;
         transform.position = spawnPoint.position;
+        // Set name of the player object
+        name = "Player_" + OwnerClientId;
+
     }
 
     void Start()

@@ -52,9 +52,10 @@ public class GrappleGun : NetworkBehaviour
     [SerializeField] private float hangDistance = 2f;
 
     private NetworkVariable<Vector2> tongueTarget = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Owner);
-    private NetworkVariable<Vector2> grapplePoint = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Owner);
+    private NetworkVariable<Vector2> grapplePoint = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Server);
     private NetworkVariable<bool> isGrappling = new NetworkVariable<bool>(false, writePerm: NetworkVariableWritePermission.Owner);
 
+    private GameObject grappleObject = null;
     public float jumpForce = 500f;
     public float minJumpDistance = 2f;
     public float grappleCooldown = 0.25f;
@@ -66,11 +67,15 @@ public class GrappleGun : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
+
         if (IsOwner)
         {
             isGrappling.Value = false;
+        }
+        if (IsServer)
+        {
             grapplePoint.Value = transform.position;
-            tongueTarget.Value = transform.position;
+
         }
 
     }
@@ -78,12 +83,13 @@ public class GrappleGun : NetworkBehaviour
 
     private void Start()
     {
+
         uiController = FindAnyObjectByType<UIController>();
         m_camera = FindAnyObjectByType<Camera>();
 
         grapplingHookAction = InputSystem.actions.FindAction("GrapplingHook");
         lookAction = InputSystem.actions.FindAction("Look");
-        UpdateGrappleJointServerRpc(false, grapplePoint.Value);
+        UpdateGrappleJointServerRpc(false, null, transform.position);
         m_lineRenderer.positionCount = precision;
 
     }
@@ -128,9 +134,16 @@ public class GrappleGun : NetworkBehaviour
 
     private void UpdateTongueTarget()
     {
-        if (!isGrappling.Value && IsOwner)
+        if (IsOwner)
         {
-            tongueTarget.Value = GetTargetPointAtDistance(minDistance);
+            if (isGrappling.Value)
+            {
+                tongueTarget.Value = (Vector2)grappleObject.transform.TransformPoint(grapplePoint.Value);
+            }
+            else
+            {
+                tongueTarget.Value = GetTargetPointAtDistance(minDistance);
+            }
         }
     }
 
@@ -178,11 +191,11 @@ public class GrappleGun : NetworkBehaviour
     {
         if (isGrappling.Value)
         {
-            UpdateGrappleJointServerRpc(false, transform.position);
+            UpdateGrappleJointServerRpc(false, null, transform.position);
             moveTime = 0;
             waveSize = StartWaveSize;
             straightLine = false;
-            tongueTarget.Value = GetTargetPointAtDistance(minDistance);
+            //tongueTarget.Value = GetTargetPointAtDistance(minDistance);
             isGrappling.Value = false;
             lastGrappleTime = Time.time;
         }
@@ -191,21 +204,23 @@ public class GrappleGun : NetworkBehaviour
 
     void OnGrappleHit(RaycastHit2D _hit)
     {
-        print(_hit.transform.gameObject);
         // Get the local position of the hit point on the hit object, so if the object moves, the grapple point will still be correct
         Vector2 localHitPoint = _hit.transform.InverseTransformPoint(_hit.point);
         int hitLayer = _hit.transform.gameObject.layer;
         moveTime = 0;
         waveSize = StartWaveSize;
         straightLine = false;
-        tongueTarget.Value = _hit.point;
+        //tongueTarget.Value = _hit.point;
 
         float distance = Vector2.Distance(_hit.point, transform.position);
         if (hitLayer == terrainLayer && m_player.isGrounded && distance <= minJumpDistance)
         {
             // If the player is grounded and the distance is less than the minimum, pop up the player, do not grapple
             PopupPlayerServerRpc(_hit.point);
-            grapplePoint.Value = transform.position;
+            if (IsServer)
+            {
+                grapplePoint.Value = transform.position;
+            }
         }
         else if (hitLayer == terrainLayer || hitLayer == playersLayer)
         {
@@ -213,20 +228,17 @@ public class GrappleGun : NetworkBehaviour
             // Grapple to terrain or player
             //grappleObject.Value = _hit.transform.gameObject;
             isGrappling.Value = true;
-            grapplePoint.Value = _hit.point;
-            UpdateGrappleJointServerRpc(true, grapplePoint.Value);
+            // Otherwise, use the hierarchy path
+            UpdateGrappleJointServerRpc(true, GetHierarchyPath(_hit.transform.gameObject), localHitPoint);
+
         }
     }
 
     [Rpc(SendTo.Server)]
     public void PopupPlayerServerRpc(Vector2 point)
     {
-        if (IsServer)
-        {
-            Vector2 distanceVector = (Vector2)transform.position - point;
-            m_rigidbody.AddForce(distanceVector.normalized * jumpForce, ForceMode2D.Force);
-
-        }
+        Vector2 distanceVector = (Vector2)transform.position - point;
+        m_rigidbody.AddForce(distanceVector.normalized * jumpForce, ForceMode2D.Force);
 
     }
 
@@ -237,23 +249,87 @@ public class GrappleGun : NetworkBehaviour
         waveSize = StartWaveSize;
         straightLine = false;
         isGrappling.Value = false;
-        tongueTarget.Value = GetTargetPointAtDistance(minDistance);
-        grapplePoint.Value = tongueTarget.Value;
+        //tongueTarget.Value = GetTargetPointAtDistance(minDistance);
+        //grapplePoint.Value = tongueTarget.Value;
     }
 
-    [Rpc(SendTo.Server)]
-    public void UpdateGrappleJointServerRpc(bool enabled, Vector2 anchor)
+    [Rpc(SendTo.ClientsAndHost)]
+    public void UpdateGrappleJointServerRpc(bool enabled, string hierarchyPath, Vector2 localHitPoint)
     {
-        if (IsServer)
+
+        if (hierarchyPath != null)
         {
-            m_springJoint2D.enabled = enabled;
-            m_springJoint2D.connectedAnchor = anchor;
-            m_springJoint2D.autoConfigureDistance = false;
-            m_springJoint2D.distance = hangDistance;
-            m_springJoint2D.frequency = launchSpeed;
+            grappleObject = FindByHierarchyPath(hierarchyPath);
+
+            if (IsServer)
+            {
+                m_springJoint2D.connectedBody = grappleObject.GetComponent<Rigidbody2D>();
+                m_springJoint2D.connectedAnchor = localHitPoint;
+                grapplePoint.Value = localHitPoint;
+
+            }
+
 
         }
+        else
+        {
+            m_springJoint2D.connectedBody = null;
+        }
+        m_springJoint2D.enabled = enabled;
+        //m_springJoint2D.connectedAnchor = anchor;
+        m_springJoint2D.autoConfigureDistance = false;
+        m_springJoint2D.distance = hangDistance;
+        m_springJoint2D.frequency = launchSpeed;
 
+    }
+
+    private static string GetHierarchyPath(GameObject obj)
+    {
+        if (obj == null)
+            return null;
+
+        string path = obj.name;
+        Transform current = obj.transform.parent;
+
+        while (current != null)
+        {
+            path = current.name + "/" + path;
+            current = current.parent;
+        }
+        return path;
+
+    }
+
+    private static GameObject FindByHierarchyPath(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return null;
+
+        string[] names = path.Split('/');
+
+        // Start by finding the root object(s) (those without a parent)
+        GameObject[] rootObjects = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+
+        GameObject current = null;
+        foreach (var root in rootObjects)
+        {
+            if (root.name == names[0])
+            {
+                current = root;
+                break;
+            }
+        }
+        if (current == null) return null;
+
+        // Traverse down the hierarchy
+        for (int i = 1; i < names.Length; i++)
+        {
+            Transform child = current.transform.Find(names[i]);
+            if (child == null)
+                return null;
+
+            current = child.gameObject;
+        }
+        return current;
     }
 
 
