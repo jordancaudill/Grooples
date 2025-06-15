@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -82,6 +83,17 @@ public class UIController : MonoBehaviour
         isPaused = true;
 
     }
+
+    public void HostGame()
+    {
+        NetworkManager.Singleton.StartHost();
+    }
+
+    public void JoinGame()
+    {
+        NetworkManager.Singleton.StartClient();
+    }
+
 
     public void ExitGame()
     {

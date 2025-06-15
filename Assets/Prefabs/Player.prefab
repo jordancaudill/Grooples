@@ -76,32 +76,94 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83720030a5293cb46a753168e6ee967d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   m_lineRenderer: {fileID: 4815119977137823805}
   m_player: {fileID: 3178409488135413617}
   precision: 40
-  straightenLineSpeed: 5
+  straightenLineSpeed: 45
   tongueAnimationCurve:
     serializedVersion: 2
-    m_Curve: []
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.25884497
+      value: -0.48443168
+      inSlope: 1.44014
+      outSlope: 1.44014
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.5053475
+      value: 0.48905957
+      inSlope: -0.07057329
+      outSlope: -0.07057329
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.7465923
+      value: -0.4828845
+      inSlope: -1.4991047
+      outSlope: -1.4991047
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0.00061035156
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
   StartWaveSize: 2
   tongueProgressionCurve:
     serializedVersion: 2
-    m_Curve: []
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  tongueProgressionSpeed: 1
-  m_camera: {fileID: 0}
+  tongueProgressionSpeed: 40
   m_springJoint2D: {fileID: 1848247816056139402}
   m_rigidbody: {fileID: 5989748641023836935}
   maxDistance: 10
-  minDistance: 1
+  minDistance: 0.75
   launchSpeed: 1
   hangDistance: 2
-  isGrappling: 1
   jumpForce: 500
   minJumpDistance: 2
   grappleCooldown: 0.25
@@ -300,12 +362,15 @@ GameObject:
   m_Component:
   - component: {fileID: 7614717614629484034}
   - component: {fileID: 1456231702647241194}
+  - component: {fileID: 1472867084520144238}
   - component: {fileID: 3178409488135413617}
   - component: {fileID: 5989748641023836935}
   - component: {fileID: 1848247816056139402}
   - component: {fileID: 701968169404931231}
   - component: {fileID: 1531998262079415352}
   - component: {fileID: 2769975541611409679}
+  - component: {fileID: 554557618220112419}
+  - component: {fileID: 2339864200801438779}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -386,6 +451,31 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1472867084520144238
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5401303326408513776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 1760457384
+  InScenePlacedSourceGlobalObjectIdHash: 1760457384
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!114 &3178409488135413617
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -398,8 +488,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0815a9cb942d6a4b81da9a28d105e95, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   moveSpeed: 5
-  jumpForce: 9
   grappleGun: {fileID: 5956600060790071398}
   groundCheck: {fileID: 848539737081547878}
   groundCheckRadius: 0.5
@@ -409,7 +499,6 @@ MonoBehaviour:
   boundsLayer:
     serializedVersion: 2
     m_Bits: 64
-  spawnPoint: {fileID: 0}
   isGrounded: 0
   isUsingGamepad: 0
 --- !u!50 &5989748641023836935
@@ -572,3 +661,66 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.48, y: 0.04}
   m_EdgeRadius: 0.06
+--- !u!114 &554557618220112419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5401303326408513776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkTransformExpanded: 0
+  AutoOwnerAuthorityTickOffset: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
+  PositionLerpSmoothing: 1
+  PositionMaxInterpolationTime: 0.1
+  RotationLerpSmoothing: 1
+  RotationMaxInterpolationTime: 0.1
+  ScaleLerpSmoothing: 1
+  ScaleMaxInterpolationTime: 0.1
+  AuthorityMode: 1
+  TickSyncChildren: 0
+  UseUnreliableDeltas: 0
+  SyncPositionX: 1
+  SyncPositionY: 1
+  SyncPositionZ: 1
+  SyncRotAngleX: 1
+  SyncRotAngleY: 1
+  SyncRotAngleZ: 1
+  SyncScaleX: 1
+  SyncScaleY: 1
+  SyncScaleZ: 1
+  PositionThreshold: 0.001
+  RotAngleThreshold: 0.01
+  ScaleThreshold: 0.01
+  UseQuaternionSynchronization: 0
+  UseQuaternionCompression: 0
+  UseHalfFloatPrecision: 0
+  InLocalSpace: 0
+  SwitchTransformSpaceWhenParented: 0
+  Interpolate: 1
+  SlerpPosition: 0
+--- !u!114 &2339864200801438779
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5401303326408513776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80d7c879794dfda4687da0e400131852, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkRigidbodyBaseExpanded: 0
+  UseRigidBodyForMotion: 0
+  AutoUpdateKinematicState: 1
+  AutoSetKinematicOnDespawn: 1

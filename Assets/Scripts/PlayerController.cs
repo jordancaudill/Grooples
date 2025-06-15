@@ -1,11 +1,11 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : NetworkBehaviour
 {
     [Header("Movement Settings")]
     public float moveSpeed = 5f;
-    public float jumpForce = 5f;
 
     [Header("Grapple")]
     public GrappleGun grappleGun;
@@ -17,7 +17,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Bounds Check")]
     public LayerMask boundsLayer;
-    public Transform spawnPoint;
+    private Transform spawnPoint;
 
     private Rigidbody2D rb;
 
@@ -30,64 +30,80 @@ public class PlayerController : MonoBehaviour
 
     public bool isUsingGamepad = false;
 
+    // Sync moveInput from owner to server
+    private NetworkVariable<Vector2> syncedMoveInput = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Owner);
+
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+
+        spawnPoint = GameObject.Find("Spawn").transform;
+        transform.position = spawnPoint.position;
+    }
+
     void Start()
     {
         playerInput = GetComponent<PlayerInput>();
         rb = GetComponent<Rigidbody2D>();
-        lookAction = InputSystem.actions.FindAction("Look");
-        moveAction = InputSystem.actions.FindAction("Move");
+        if (playerInput != null)
+        {
+            lookAction = InputSystem.actions.FindAction("Look");
+            moveAction = InputSystem.actions.FindAction("Move");
+        }
     }
 
-    public void OnLook() {
-     if (playerInput.currentControlScheme == "Gamepad")
+    public void OnLook()
+    {
+        if (!IsOwner) return;
+        if (playerInput.currentControlScheme == "Gamepad")
         {
             isUsingGamepad = true;
-        } else
+        }
+        else
         {
             isUsingGamepad = false;
         }
     }
 
-
-
     void Update()
     {
+        if (!IsOwner) return;
+
         if (isUsingGamepad)
         {
             moveInput = lookAction.ReadValue<Vector2>();
-
-        } else
+        }
+        else
         {
             moveInput = moveAction.ReadValue<Vector2>();
-
         }
 
+        syncedMoveInput.Value = moveInput;
     }
 
     void FixedUpdate()
     {
+        if (!IsOwner) return; // Only the owner moves the player
+
+        if (rb == null) return;
+
         if (CheckOutOfBounds())
         {
             rb.position = spawnPoint.position; // Reset position if out of bounds
-            rb.linearVelocity = new Vector2(0, 0);
+            rb.linearVelocity = Vector2.zero;
         }
         else
         {
-
             // Check if grounded
             isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 
-            // Apply horizontal movement
-            rb.AddForce(new Vector2(moveInput.x * moveSpeed, 0), ForceMode2D.Force);
-
+            // Apply horizontal movement based on most recent synced input
+            rb.AddForce(new Vector2(syncedMoveInput.Value.x * moveSpeed, 0), ForceMode2D.Force);
         }
-
     }
 
     bool CheckOutOfBounds()
     {
         return Physics2D.OverlapCircle(rb.position, 1f, boundsLayer);
     }
-
-
 }
