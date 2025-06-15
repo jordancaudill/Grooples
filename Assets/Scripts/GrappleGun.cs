@@ -89,7 +89,7 @@ public class GrappleGun : NetworkBehaviour
 
         grapplingHookAction = InputSystem.actions.FindAction("GrapplingHook");
         lookAction = InputSystem.actions.FindAction("Look");
-        UpdateGrappleJointServerRpc(false, null, transform.position);
+        //UpdateGrappleJointServerRpc(false, null, transform.position);
         m_lineRenderer.positionCount = precision;
 
     }
@@ -107,6 +107,7 @@ public class GrappleGun : NetworkBehaviour
             // Does not matter if owner or not, we always draw the tongue
             DrawTongue();
         }
+        print(tongueTarget.Value);
     }
 
     private Vector2 GetNormalizedTongueDirection()
@@ -191,12 +192,13 @@ public class GrappleGun : NetworkBehaviour
     {
         if (isGrappling.Value)
         {
-            UpdateGrappleJointServerRpc(false, null, transform.position);
+            UpdateGrappleJointServerRpc(false, null, Vector2.zero);
             moveTime = 0;
             waveSize = StartWaveSize;
             straightLine = false;
-            //tongueTarget.Value = GetTargetPointAtDistance(minDistance);
+            tongueTarget.Value = GetTargetPointAtDistance(minDistance);
             isGrappling.Value = false;
+            grappleObject = null;
             lastGrappleTime = Time.time;
         }
     }
@@ -265,8 +267,7 @@ public class GrappleGun : NetworkBehaviour
             {
                 m_springJoint2D.connectedBody = grappleObject.GetComponent<Rigidbody2D>();
                 m_springJoint2D.connectedAnchor = localHitPoint;
-                grapplePoint.Value = localHitPoint;
-
+                grapplePoint.Value = localHitPoint;  
             }
 
 
@@ -274,7 +275,11 @@ public class GrappleGun : NetworkBehaviour
         else
         {
             m_springJoint2D.connectedBody = null;
+            m_springJoint2D.connectedAnchor = localHitPoint;
+            grappleObject = null;
+            grapplePoint.Value = localHitPoint;
         }
+
         m_springJoint2D.enabled = enabled;
         //m_springJoint2D.connectedAnchor = anchor;
         m_springJoint2D.autoConfigureDistance = false;
@@ -339,31 +344,31 @@ public class GrappleGun : NetworkBehaviour
         Vector2 drawTongueTarget = tongueTarget.Value;
         Vector2 drawGrapplePoint = grapplePoint.Value;
         bool drawIsGrappling = isGrappling.Value;
-
-        if (!straightLine)
-        {
-            if (Math.Abs(m_lineRenderer.GetPosition(precision - 1).x - drawTongueTarget.x) <= 0.1f && Math.Abs(m_lineRenderer.GetPosition(precision - 1).y - drawTongueTarget.y) <= 0.1f)
-            {
-                straightLine = true;
-            }
-            else
-            {
-                DrawTongueWaves(drawTongueTarget, drawGrapplePoint, drawIsGrappling);
-            }
-        }
-        else
-        {
-            if (waveSize > 0)
-            {
-                waveSize -= Time.deltaTime * straightenLineSpeed;
-                DrawTongueWaves(drawTongueTarget, drawGrapplePoint, drawIsGrappling);
-            }
-            else
-            {
-                waveSize = 0;
-                DrawTongueNoWaves(drawTongueTarget);
-            }
-        }
+        DrawTongueNoWaves(drawTongueTarget);
+        //if (!straightLine)
+        //{
+        //    if (Math.Abs(m_lineRenderer.GetPosition(precision - 1).x - drawTongueTarget.x) <= 0.1f && Math.Abs(m_lineRenderer.GetPosition(precision - 1).y - drawTongueTarget.y) <= 0.1f)
+        //    {
+        //        straightLine = true;
+        //    }
+        //    else
+        //    {
+        //        DrawTongueWaves(drawTongueTarget, drawGrapplePoint, drawIsGrappling);
+        //    }
+        //}
+        //else
+        //{
+        //    if (waveSize > 0)
+        //    {
+        //        waveSize -= Time.deltaTime * straightenLineSpeed;
+        //        DrawTongueWaves(drawTongueTarget, drawGrapplePoint, drawIsGrappling);
+        //    }
+        //    else
+        //    {
+        //        waveSize = 0;
+        //        DrawTongueNoWaves(drawTongueTarget);
+        //    }
+        //}
     }
 
     void DrawTongueWaves(Vector2 drawTongueTarget, Vector2 drawGrapplePoint, bool drawIsGrappling)
