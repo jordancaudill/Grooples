@@ -83,7 +83,7 @@ public class PlayerController : NetworkBehaviour
 
     void FixedUpdate()
     {
-        if (!IsOwner) return; // Only the owner moves the player
+        if (!IsServer) return; // Only the server moves the player
 
         if (rb == null) return;
 

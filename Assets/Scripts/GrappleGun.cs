@@ -78,10 +78,7 @@ public class GrappleGun : NetworkBehaviour
 
         grapplingHookAction = InputSystem.actions.FindAction("GrapplingHook");
         lookAction = InputSystem.actions.FindAction("Look");
-        m_springJoint2D.enabled = false;
-        m_springJoint2D.autoConfigureDistance = false;
-        m_springJoint2D.distance = hangDistance;
-        m_springJoint2D.frequency = launchSpeed;
+        UpdateGrappleJointServerRpc(false, grapplePoint.Value);
         m_lineRenderer.positionCount = precision;
 
     }
@@ -163,7 +160,7 @@ public class GrappleGun : NetworkBehaviour
     {
         if (isGrappling.Value)
         {
-            m_springJoint2D.enabled = false;
+            UpdateGrappleJointServerRpc(false, transform.position);
             moveTime = 0;
             waveSize = StartWaveSize;
             straightLine = false;
@@ -194,8 +191,8 @@ public class GrappleGun : NetworkBehaviour
         {
             isGrappling.Value = true;
             grapplePoint.Value = _hit.point;
-            m_springJoint2D.connectedAnchor = grapplePoint.Value;
-            m_springJoint2D.enabled = true;
+            UpdateGrappleJointServerRpc(true, grapplePoint.Value);
+
                     print("hit for client # " + NetworkManager.Singleton.LocalClientId);
 
         }
@@ -210,6 +207,23 @@ public class GrappleGun : NetworkBehaviour
         tongueTarget.Value = GetTargetPointAtDistance(minDistance);
         grapplePoint.Value = tongueTarget.Value;
     }
+
+    [Rpc(SendTo.Server)]
+    public void UpdateGrappleJointServerRpc(bool enabled, Vector2 anchor)
+    {
+        if (IsServer)
+        {
+            m_springJoint2D.enabled = enabled;
+            m_springJoint2D.connectedAnchor = anchor;
+            m_springJoint2D.autoConfigureDistance = false;
+            m_springJoint2D.distance = hangDistance;
+            m_springJoint2D.frequency = launchSpeed;
+
+        }
+
+    }
+
+
 
     void DrawTongue()
     {

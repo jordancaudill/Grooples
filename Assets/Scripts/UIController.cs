@@ -87,11 +87,14 @@ public class UIController : MonoBehaviour
     public void HostGame()
     {
         NetworkManager.Singleton.StartHost();
+        ResumeGame();
     }
 
     public void JoinGame()
     {
         NetworkManager.Singleton.StartClient();
+        ResumeGame();
+
     }
 
 
