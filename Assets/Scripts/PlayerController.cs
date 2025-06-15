@@ -13,7 +13,7 @@ public class PlayerController : NetworkBehaviour
     [Header("Ground Check")]
     public Transform groundCheck;
     public float groundCheckRadius = 0.2f;
-    public LayerMask groundLayer;
+    public LayerMask terrainLayer;
 
     [Header("Bounds Check")]
     public LayerMask boundsLayer;
@@ -83,6 +83,9 @@ public class PlayerController : NetworkBehaviour
 
     void FixedUpdate()
     {
+        // Check if grounded
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, terrainLayer);
+
         if (!IsServer) return; // Only the server moves the player
 
         if (rb == null) return;
@@ -94,8 +97,6 @@ public class PlayerController : NetworkBehaviour
         }
         else
         {
-            // Check if grounded
-            isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 
             // Apply horizontal movement based on most recent synced input
             rb.AddForce(new Vector2(syncedMoveInput.Value.x * moveSpeed, 0), ForceMode2D.Force);

@@ -19,6 +19,9 @@ public class GrappleGun : NetworkBehaviour
     [Range(0.01f, 4)][SerializeField] private float StartWaveSize = 2;
     float waveSize = 0;
 
+    // An array of colliders that the tongue should ignore
+    [SerializeField] public Collider2D[] ignoreColliders;
+
     [Header("Tongue Progression:")]
     public AnimationCurve tongueProgressionCurve;
     [SerializeField][Range(1, 50)] private float tongueProgressionSpeed = 1;
@@ -27,7 +30,9 @@ public class GrappleGun : NetworkBehaviour
 
     private bool straightLine = true;
 
-    private int groundLayer = 3;
+    private int terrainLayer = 3;
+    private int playersLayer = 7;
+    public LayerMask hitLayers;
 
     private Camera m_camera;
 
@@ -142,10 +147,23 @@ public class GrappleGun : NetworkBehaviour
         }
     }
 
+    private void ToggleColliders(bool enable)
+    {
+        foreach (Collider2D collider in ignoreColliders)
+        {
+            if (collider != null)
+            {
+                collider.enabled = enable;
+            }
+        }
+    }
+
     private void StartGrapple(Vector2 lookPos)
     {
         Vector2 distanceVector = lookPos - (Vector2)transform.position;
-        RaycastHit2D _hit = Physics2D.Raycast(transform.position, distanceVector.normalized, maxDistance, ~groundLayer);
+        ToggleColliders(false);
+        RaycastHit2D _hit = Physics2D.Raycast(transform.position, distanceVector.normalized, maxDistance, hitLayers);
+        ToggleColliders(true);
         if (_hit.transform != null)
         {
             OnGrappleHit(_hit);
@@ -173,30 +191,45 @@ public class GrappleGun : NetworkBehaviour
 
     void OnGrappleHit(RaycastHit2D _hit)
     {
+        print(_hit.transform.gameObject);
+        // Get the local position of the hit point on the hit object, so if the object moves, the grapple point will still be correct
+        Vector2 localHitPoint = _hit.transform.InverseTransformPoint(_hit.point);
+        int hitLayer = _hit.transform.gameObject.layer;
         moveTime = 0;
         waveSize = StartWaveSize;
         straightLine = false;
         tongueTarget.Value = _hit.point;
 
         float distance = Vector2.Distance(_hit.point, transform.position);
-
-        if (m_player.isGrounded && distance <= minJumpDistance)
+        if (hitLayer == terrainLayer && m_player.isGrounded && distance <= minJumpDistance)
         {
-            // If the player is grounded and the distance is less than the minimum, do not grapple
-            Vector2 distanceVector = (Vector2)transform.position - _hit.point;
-            m_rigidbody.AddForce(distanceVector.normalized * jumpForce, ForceMode2D.Force);
+            // If the player is grounded and the distance is less than the minimum, pop up the player, do not grapple
+            PopupPlayerServerRpc(_hit.point);
             grapplePoint.Value = transform.position;
         }
-        else
+        else if (hitLayer == terrainLayer || hitLayer == playersLayer)
         {
+
+            // Grapple to terrain or player
+            //grappleObject.Value = _hit.transform.gameObject;
             isGrappling.Value = true;
             grapplePoint.Value = _hit.point;
             UpdateGrappleJointServerRpc(true, grapplePoint.Value);
-
-                    print("hit for client # " + NetworkManager.Singleton.LocalClientId);
-
         }
     }
+
+    [Rpc(SendTo.Server)]
+    public void PopupPlayerServerRpc(Vector2 point)
+    {
+        if (IsServer)
+        {
+            Vector2 distanceVector = (Vector2)transform.position - point;
+            m_rigidbody.AddForce(distanceVector.normalized * jumpForce, ForceMode2D.Force);
+
+        }
+
+    }
+
 
     void OnGrappleMiss(Vector2 distanceVector)
     {
