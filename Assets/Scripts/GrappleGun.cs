@@ -370,7 +370,7 @@ public class GrappleGun : NetworkBehaviour
             else
             {
                 targetPosition = Vector2.Lerp(transform.position, lastGrappleLocation, delta) + offset;
-                currentPosition = Vector2.Lerp(targetPosition, transform.position, tongueProgressionCurve.Evaluate(moveTime) * tongueProgressionSpeed);
+                currentPosition = Vector2.Lerp(targetPosition, tongueTarget.Value, tongueProgressionCurve.Evaluate(moveTime) * tongueProgressionSpeed);
             }
 
             m_lineRenderer.SetPosition(i, currentPosition);
