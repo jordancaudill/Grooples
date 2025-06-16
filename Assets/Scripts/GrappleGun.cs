@@ -52,10 +52,12 @@ public class GrappleGun : NetworkBehaviour
     [SerializeField] private float hangDistance = 2f;
 
     private NetworkVariable<Vector2> tongueTarget = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Owner);
-    private NetworkVariable<Vector2> grapplePoint = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Server);
-    private NetworkVariable<bool> isGrappling = new NetworkVariable<bool>(false, writePerm: NetworkVariableWritePermission.Owner);
+    //private NetworkVariable<Vector2> grappleOffset = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Server);
 
+    private Vector2 grappleOffset;
     private GameObject grappleObject = null;
+    private Vector2 lastGrappleLocation;
+
     public float jumpForce = 500f;
     public float minJumpDistance = 2f;
     public float grappleCooldown = 0.25f;
@@ -66,17 +68,6 @@ public class GrappleGun : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-
-
-        if (IsOwner)
-        {
-            isGrappling.Value = false;
-        }
-        if (IsServer)
-        {
-            grapplePoint.Value = transform.position;
-
-        }
 
     }
 
@@ -89,7 +80,6 @@ public class GrappleGun : NetworkBehaviour
 
         grapplingHookAction = InputSystem.actions.FindAction("GrapplingHook");
         lookAction = InputSystem.actions.FindAction("Look");
-        //UpdateGrappleJointServerRpc(false, null, transform.position);
         m_lineRenderer.positionCount = precision;
 
     }
@@ -107,7 +97,6 @@ public class GrappleGun : NetworkBehaviour
             // Does not matter if owner or not, we always draw the tongue
             DrawTongue();
         }
-        print(tongueTarget.Value);
     }
 
     private Vector2 GetNormalizedTongueDirection()
@@ -137,11 +126,7 @@ public class GrappleGun : NetworkBehaviour
     {
         if (IsOwner)
         {
-            if (isGrappling.Value)
-            {
-                tongueTarget.Value = (Vector2)grappleObject.transform.TransformPoint(grapplePoint.Value);
-            }
-            else
+            if (grappleObject == null)
             {
                 tongueTarget.Value = GetTargetPointAtDistance(minDistance);
             }
@@ -190,24 +175,21 @@ public class GrappleGun : NetworkBehaviour
 
     private void StopGrapple()
     {
-        if (isGrappling.Value)
-        {
-            UpdateGrappleJointServerRpc(false, null, Vector2.zero);
-            moveTime = 0;
-            waveSize = StartWaveSize;
-            straightLine = false;
-            tongueTarget.Value = GetTargetPointAtDistance(minDistance);
-            isGrappling.Value = false;
-            grappleObject = null;
-            lastGrappleTime = Time.time;
-        }
+        if (grappleObject  == null) return;
+
+        UpdateGrappleRpc(false, null, Vector2.zero);
+        moveTime = 0;
+        waveSize = StartWaveSize;
+        straightLine = false;
+        tongueTarget.Value = GetTargetPointAtDistance(minDistance);
+        grappleObject = null;
+        lastGrappleTime = Time.time;
+        
     }
 
 
     void OnGrappleHit(RaycastHit2D _hit)
     {
-        // Get the local position of the hit point on the hit object, so if the object moves, the grapple point will still be correct
-        Vector2 localHitPoint = _hit.transform.InverseTransformPoint(_hit.point);
         int hitLayer = _hit.transform.gameObject.layer;
         moveTime = 0;
         waveSize = StartWaveSize;
@@ -215,23 +197,23 @@ public class GrappleGun : NetworkBehaviour
         //tongueTarget.Value = _hit.point;
 
         float distance = Vector2.Distance(_hit.point, transform.position);
-        if (hitLayer == terrainLayer && m_player.isGrounded && distance <= minJumpDistance)
+        if (_hit.transform.gameObject.layer == terrainLayer && m_player.isGrounded && distance <= minJumpDistance)
         {
             // If the player is grounded and the distance is less than the minimum, pop up the player, do not grapple
             PopupPlayerServerRpc(_hit.point);
-            if (IsServer)
-            {
-                grapplePoint.Value = transform.position;
-            }
         }
-        else if (hitLayer == terrainLayer || hitLayer == playersLayer)
+        else if (_hit.transform.gameObject.layer == terrainLayer || _hit.transform.gameObject.layer == playersLayer)
         {
 
             // Grapple to terrain or player
-            //grappleObject.Value = _hit.transform.gameObject;
-            isGrappling.Value = true;
+            // Get the local position of the hit point on the hit object, so if the object moves, the grapple point will still be correct
+            grappleOffset = _hit.transform.InverseTransformPoint(_hit.point);
+            grappleObject = _hit.transform.gameObject;
+            tongueTarget.Value = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
+            lastGrappleLocation = tongueTarget.Value;
+
             // Otherwise, use the hierarchy path
-            UpdateGrappleJointServerRpc(true, GetHierarchyPath(_hit.transform.gameObject), localHitPoint);
+            UpdateGrappleRpc(true, GetHierarchyPath(_hit.transform.gameObject), grappleOffset);
 
         }
     }
@@ -250,38 +232,34 @@ public class GrappleGun : NetworkBehaviour
         moveTime = 0;
         waveSize = StartWaveSize;
         straightLine = false;
-        isGrappling.Value = false;
-        //tongueTarget.Value = GetTargetPointAtDistance(minDistance);
-        //grapplePoint.Value = tongueTarget.Value;
+        tongueTarget.Value = GetTargetPointAtDistance(maxDistance);
+        //grappleOffset.Value = tongueTarget.Value;
     }
 
     [Rpc(SendTo.ClientsAndHost)]
-    public void UpdateGrappleJointServerRpc(bool enabled, string hierarchyPath, Vector2 localHitPoint)
+    public void UpdateGrappleRpc(bool enabled, string hierarchyPath, Vector2 localHitPoint)
     {
 
         if (hierarchyPath != null)
         {
             grappleObject = FindByHierarchyPath(hierarchyPath);
+            grappleOffset = localHitPoint;
 
             if (IsServer)
             {
                 m_springJoint2D.connectedBody = grappleObject.GetComponent<Rigidbody2D>();
                 m_springJoint2D.connectedAnchor = localHitPoint;
-                grapplePoint.Value = localHitPoint;  
             }
-
-
         }
         else
         {
             m_springJoint2D.connectedBody = null;
-            m_springJoint2D.connectedAnchor = localHitPoint;
+            m_springJoint2D.connectedAnchor = Vector2.zero;
             grappleObject = null;
-            grapplePoint.Value = localHitPoint;
+            grappleOffset = Vector2.zero;
         }
 
         m_springJoint2D.enabled = enabled;
-        //m_springJoint2D.connectedAnchor = anchor;
         m_springJoint2D.autoConfigureDistance = false;
         m_springJoint2D.distance = hangDistance;
         m_springJoint2D.frequency = launchSpeed;
@@ -341,67 +319,64 @@ public class GrappleGun : NetworkBehaviour
 
     void DrawTongue()
     {
-        Vector2 drawTongueTarget = tongueTarget.Value;
-        Vector2 drawGrapplePoint = grapplePoint.Value;
-        bool drawIsGrappling = isGrappling.Value;
-        DrawTongueNoWaves(drawTongueTarget);
-        //if (!straightLine)
-        //{
-        //    if (Math.Abs(m_lineRenderer.GetPosition(precision - 1).x - drawTongueTarget.x) <= 0.1f && Math.Abs(m_lineRenderer.GetPosition(precision - 1).y - drawTongueTarget.y) <= 0.1f)
-        //    {
-        //        straightLine = true;
-        //    }
-        //    else
-        //    {
-        //        DrawTongueWaves(drawTongueTarget, drawGrapplePoint, drawIsGrappling);
-        //    }
-        //}
-        //else
-        //{
-        //    if (waveSize > 0)
-        //    {
-        //        waveSize -= Time.deltaTime * straightenLineSpeed;
-        //        DrawTongueWaves(drawTongueTarget, drawGrapplePoint, drawIsGrappling);
-        //    }
-        //    else
-        //    {
-        //        waveSize = 0;
-        //        DrawTongueNoWaves(drawTongueTarget);
-        //    }
-        //}
+
+        if (!straightLine)
+        {
+            if (Math.Abs(m_lineRenderer.GetPosition(precision - 1).x - tongueTarget.Value.x) <= 0.1f && Math.Abs(m_lineRenderer.GetPosition(precision - 1).y - tongueTarget.Value.y) <= 0.1f)
+            {
+                straightLine = true;
+            }
+            else
+            {
+                DrawTongueWaves();
+            }
+        }
+        else
+        {
+            if (waveSize > 0)
+            {
+                waveSize -= Time.deltaTime * straightenLineSpeed;
+                DrawTongueWaves();
+            }
+            else
+            {
+                waveSize = 0;
+                DrawTongueNoWaves();
+            }
+        }
     }
 
-    void DrawTongueWaves(Vector2 drawTongueTarget, Vector2 drawGrapplePoint, bool drawIsGrappling)
+    void DrawTongueWaves()
     {
-        Vector2 grappleDistanceVector = drawTongueTarget - (Vector2)transform.position;
+        Vector2 grappleDistanceVector = tongueTarget.Value - (Vector2)transform.position;
 
         for (int i = 0; i < precision; i++)
         {
-            float delta = (float)i / ((float)precision - 1f);
+            float delta = i / (precision - 1f);
             Vector2 offset = Vector2.Perpendicular(grappleDistanceVector).normalized * tongueAnimationCurve.Evaluate(delta) * waveSize;
             Vector2 targetPosition, currentPosition;
-            if (drawIsGrappling)
+            if (grappleObject != null)
             {
-                targetPosition = Vector2.Lerp(transform.position, drawTongueTarget, delta) + offset;
+                targetPosition = Vector2.Lerp(transform.position, tongueTarget.Value, delta) + offset;
                 currentPosition = Vector2.Lerp(transform.position, targetPosition, tongueProgressionCurve.Evaluate(moveTime) * tongueProgressionSpeed);
             }
             else
             {
-                targetPosition = Vector2.Lerp(drawGrapplePoint, drawTongueTarget, delta) + offset;
-                currentPosition = Vector2.Lerp(targetPosition, drawTongueTarget, tongueProgressionCurve.Evaluate(moveTime) * tongueProgressionSpeed);
+                targetPosition = Vector2.Lerp(lastGrappleLocation, tongueTarget.Value, delta) + offset;
+                currentPosition = Vector2.Lerp(targetPosition, tongueTarget.Value, tongueProgressionCurve.Evaluate(moveTime) * tongueProgressionSpeed);
             }
 
             m_lineRenderer.SetPosition(i, currentPosition);
         }
     }
 
-    void DrawTongueNoWaves(Vector2 drawTongueTarget)
+    void DrawTongueNoWaves()
     {
         m_lineRenderer.SetPosition(0, transform.position);
 
         for (int i = 1; i < precision; i++)
         {
-            m_lineRenderer.SetPosition(i, drawTongueTarget);
+            m_lineRenderer.SetPosition(i, tongueTarget.Value);
         }
     }
 
