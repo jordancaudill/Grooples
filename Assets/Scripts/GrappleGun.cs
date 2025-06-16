@@ -178,9 +178,6 @@ public class GrappleGun : NetworkBehaviour
         if (grappleObject  == null) return;
 
         UpdateGrappleRpc(false, null, Vector2.zero);
-        moveTime = 0;
-        waveSize = StartWaveSize;
-        straightLine = false;
         tongueTarget.Value = GetTargetPointAtDistance(minDistance);
         grappleObject = null;
         lastGrappleTime = Time.time;
@@ -223,6 +220,7 @@ public class GrappleGun : NetworkBehaviour
     {
         Vector2 distanceVector = (Vector2)transform.position - point;
         m_rigidbody.AddForce(distanceVector.normalized * jumpForce, ForceMode2D.Force);
+        lastGrappleLocation = point;
 
     }
 
@@ -233,12 +231,15 @@ public class GrappleGun : NetworkBehaviour
         waveSize = StartWaveSize;
         straightLine = false;
         tongueTarget.Value = GetTargetPointAtDistance(maxDistance);
-        //grappleOffset.Value = tongueTarget.Value;
+        lastGrappleLocation = tongueTarget.Value;
     }
 
     [Rpc(SendTo.ClientsAndHost)]
     public void UpdateGrappleRpc(bool enabled, string hierarchyPath, Vector2 localHitPoint)
     {
+        moveTime = 0;
+        waveSize = StartWaveSize;
+        straightLine = false;
 
         if (hierarchyPath != null)
         {
@@ -362,8 +363,8 @@ public class GrappleGun : NetworkBehaviour
             }
             else
             {
-                targetPosition = Vector2.Lerp(lastGrappleLocation, tongueTarget.Value, delta) + offset;
-                currentPosition = Vector2.Lerp(targetPosition, tongueTarget.Value, tongueProgressionCurve.Evaluate(moveTime) * tongueProgressionSpeed);
+                targetPosition = Vector2.Lerp(transform.position, lastGrappleLocation, delta) + offset;
+                currentPosition = Vector2.Lerp(targetPosition, transform.position, tongueProgressionCurve.Evaluate(moveTime) * tongueProgressionSpeed);
             }
 
             m_lineRenderer.SetPosition(i, currentPosition);
