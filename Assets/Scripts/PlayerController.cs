@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -41,6 +43,7 @@ public class PlayerController : NetworkBehaviour
         transform.position = spawnPoint.position;
         // Set name of the player object
         name = "Player_" + OwnerClientId;
+        AssignSpriteToPlayer();
 
     }
 
@@ -109,5 +112,19 @@ public class PlayerController : NetworkBehaviour
     bool CheckOutOfBounds()
     {
         return Physics2D.OverlapCircle(rb.position, 1f, boundsLayer);
+    }
+
+    private void AssignSpriteToPlayer()
+    {
+        Dictionary<int, string> playerSprites = new Dictionary<int, string>
+        {
+            { 0, "Sprites/player_pink" },
+            { 1, "Sprites/player_green" },
+            { 2, "Sprites/player_yellow" },
+            { 3, "Sprites/player_purple" },
+        };
+        string playerSprite = playerSprites[(int)OwnerClientId];
+        Sprite resource = Resources.Load<Sprite>(playerSprite);
+        GetComponent<SpriteRenderer>().sprite = resource;
     }
 }

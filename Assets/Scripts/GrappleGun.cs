@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -77,7 +78,7 @@ public class GrappleGun : NetworkBehaviour
 
         uiController = FindAnyObjectByType<UIController>();
         m_camera = FindAnyObjectByType<Camera>();
-
+        AssignColorToPlayer();
         grapplingHookAction = InputSystem.actions.FindAction("GrapplingHook");
         lookAction = InputSystem.actions.FindAction("Look");
         m_lineRenderer.positionCount = precision;
@@ -129,7 +130,8 @@ public class GrappleGun : NetworkBehaviour
             if (grappleObject == null)
             {
                 tongueTarget.Value = GetTargetPointAtDistance(minDistance);
-            } else
+            }
+            else
             {
                 tongueTarget.Value = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
             }
@@ -390,5 +392,32 @@ public class GrappleGun : NetworkBehaviour
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, maxDistance);
         Gizmos.DrawWireSphere(tongueTarget.Value, 0.1f);
+    }
+
+    private void AssignColorToPlayer()
+    {
+        // Assign a color to the player based on the OwnerClientId or any other logic
+        Dictionary<int, string> playerColors = new Dictionary<int, string>
+        {
+            { 0, "#EA61CC" },
+            { 1, "#689581" },
+            { 2, "#E9AC6F" },
+            { 3, "#9576A6" },
+        };
+
+        string playerColor = playerColors[(int)OwnerClientId];
+        ColorUtility.TryParseHtmlString(playerColor, out Color color);
+
+        GetComponent<LineRenderer>().colorGradient = new Gradient
+        {
+            colorKeys = new GradientColorKey[]
+            {
+                new GradientColorKey(color, 1f)
+            },
+            alphaKeys = new GradientAlphaKey[]
+            {
+                new GradientAlphaKey(1f, 1f)
+            }
+        };
     }
 }
