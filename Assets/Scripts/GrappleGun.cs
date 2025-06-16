@@ -129,6 +129,9 @@ public class GrappleGun : NetworkBehaviour
             if (grappleObject == null)
             {
                 tongueTarget.Value = GetTargetPointAtDistance(minDistance);
+            } else
+            {
+                tongueTarget.Value = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
             }
         }
     }
@@ -175,13 +178,13 @@ public class GrappleGun : NetworkBehaviour
 
     private void StopGrapple()
     {
-        if (grappleObject  == null) return;
+        if (grappleObject == null) return;
 
         UpdateGrappleRpc(false, null, Vector2.zero);
         tongueTarget.Value = GetTargetPointAtDistance(minDistance);
         grappleObject = null;
         lastGrappleTime = Time.time;
-        
+
     }
 
 
@@ -197,6 +200,7 @@ public class GrappleGun : NetworkBehaviour
         if (_hit.transform.gameObject.layer == terrainLayer && m_player.isGrounded && distance <= minJumpDistance)
         {
             // If the player is grounded and the distance is less than the minimum, pop up the player, do not grapple
+            lastGrappleLocation = _hit.point;
             PopupPlayerServerRpc(_hit.point);
         }
         else if (_hit.transform.gameObject.layer == terrainLayer || _hit.transform.gameObject.layer == playersLayer)
