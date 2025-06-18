@@ -196,7 +196,7 @@ public class GrappleGun : NetworkBehaviour
     {
         if (grappleObject == null) return;
 
-        UpdateGrappleRpc(false, null, Vector2.zero);
+        UpdateGrapple(false, null, Vector2.zero);
         tongueTarget.Value = GetTargetPointAtDistance(minDistance);
         grappleObject = null;
         lastGrappleTime = Time.time;
@@ -216,8 +216,7 @@ public class GrappleGun : NetworkBehaviour
         if (_hit.transform.gameObject.layer == terrainLayer && m_player.isGrounded && distance <= minJumpDistance)
         {
             // If the player is grounded and the distance is less than the minimum, pop up the player, do not grapple
-            lastGrappleLocation = _hit.point;
-            PopupPlayerServerRpc(_hit.point);
+            PopupPlayer(_hit.point);
         }
         else if (_hit.transform.gameObject.layer == terrainLayer || _hit.transform.gameObject.layer == playersLayer)
         {
@@ -230,17 +229,27 @@ public class GrappleGun : NetworkBehaviour
             lastGrappleLocation = tongueTarget.Value;
 
             // Otherwise, use the hierarchy path
-            UpdateGrappleRpc(true, GetHierarchyPath(_hit.transform.gameObject), grappleOffset);
+            UpdateGrapple(true, GetHierarchyPath(_hit.transform.gameObject), grappleOffset);
 
         }
     }
 
-    [Rpc(SendTo.Server)]
-    public void PopupPlayerServerRpc(Vector2 point)
+    public void PopupPlayer(Vector2 point)
     {
         Vector2 distanceVector = (Vector2)transform.position - point;
         m_rigidbody.AddForce(distanceVector.normalized * jumpForce, ForceMode2D.Force);
         lastGrappleLocation = point;
+
+        if (IsOwner)
+        {
+            PopupPlayerRpc(point);
+        }
+    }
+
+    [Rpc(SendTo.NotOwner)]
+    public void PopupPlayerRpc(Vector2 point)
+    {
+        PopupPlayer(point);
     }
 
 
@@ -254,8 +263,7 @@ public class GrappleGun : NetworkBehaviour
         lastGrappleLocation = tongueTarget.Value;
     }
 
-    [Rpc(SendTo.ClientsAndHost)]
-    public void UpdateGrappleRpc(bool enabled, string hierarchyPath, Vector2 localHitPoint)
+    public void UpdateGrapple(bool enabled, string hierarchyPath, Vector2 localHitPoint)
     {
         moveTime = 0;
         waveSize = StartWaveSize;
@@ -284,9 +292,19 @@ public class GrappleGun : NetworkBehaviour
         m_springJoint2D.autoConfigureDistance = false;
         m_springJoint2D.distance = hangDistance;
         m_springJoint2D.frequency = launchSpeed;
-
+            
+        if (IsOwner)
+        {
+            UpdateGrappleRpc(enabled, hierarchyPath, localHitPoint);
+        }
     }
 
+
+    [Rpc(SendTo.NotOwner)]
+    public void UpdateGrappleRpc(bool enabled, string hierarchyPath, Vector2 localHitPoint)
+    {
+        UpdateGrapple(enabled, hierarchyPath, localHitPoint);
+    }
     private static string GetHierarchyPath(GameObject obj)
     {
         if (obj == null)
