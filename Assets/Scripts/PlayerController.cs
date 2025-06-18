@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Unity.Netcode;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -26,66 +25,82 @@ public class PlayerController : NetworkBehaviour
     public bool isGrounded;
     private Vector2 moveInput;
 
-    PlayerInput playerInput;
-    InputAction lookAction;
-    InputAction moveAction;
-
-    public bool isUsingGamepad = false;
-
+    private NetworkObject networkObject;
+    public PlayerInput playerInput;
+    public PlayerInputManager playerInputManager;
+    public int playerNumber;
     // Sync moveInput from owner to server
     private NetworkVariable<Vector2> syncedMoveInput = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Owner);
+
+    GameManager gameManager;
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-
-        spawnPoint = GameObject.Find("Spawn").transform;
-        transform.position = spawnPoint.position;
-        // Set name of the player object
-        name = "Player_" + OwnerClientId;
-        AssignSpriteToPlayer();
+        print(OwnerClientId + " " + IsOwner + " " + IsClient + " " + IsHost + " " + IsServer);
 
     }
 
     void Start()
     {
-        playerInput = GetComponent<PlayerInput>();
-        rb = GetComponent<Rigidbody2D>();
-        if (playerInput != null)
+        print(OwnerClientId + " " + IsOwner + " " + IsClient + " " + IsHost + " " + IsServer);
+        if (!IsHost && !IsServer && !IsClient)
         {
-            lookAction = InputSystem.actions.FindAction("Look");
-            moveAction = InputSystem.actions.FindAction("Move");
+            // New local player probably joined so we need to spawn the NetworkObject
+            networkObject = GetComponent<NetworkObject>();
+            networkObject.Spawn();
         }
+        spawnPoint = GameObject.Find("Spawn").transform;
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+        playerInputManager = GameObject.Find("PlayerInputManager").GetComponent<PlayerInputManager>();
+        transform.position = spawnPoint.position;
+        playerNumber = (int)OwnerClientId + playerInputManager.playerCount - 1;
+        name = "Player_" + playerNumber;
+        AssignSpriteToPlayer();
+
+        rb = GetComponent<Rigidbody2D>();
     }
 
-    public void OnLook()
+
+    public void OnLook(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
         if (playerInput.currentControlScheme == "Gamepad")
         {
-            isUsingGamepad = true;
+            moveInput = context.ReadValue<Vector2>();
+            syncedMoveInput.Value = moveInput;
         }
-        else
-        {
-            isUsingGamepad = false;
-        }
+
     }
 
-    void Update()
+    public void OnMove(InputAction.CallbackContext context)
     {
         if (!IsOwner) return;
-
-        if (isUsingGamepad)
+        if (playerInput.currentControlScheme != "Gamepad")
         {
-            moveInput = lookAction.ReadValue<Vector2>();
-        }
-        else
-        {
-            moveInput = moveAction.ReadValue<Vector2>();
+            moveInput = context.ReadValue<Vector2>();
+            syncedMoveInput.Value = moveInput;
         }
 
-        syncedMoveInput.Value = moveInput;
+
     }
+
+
+    //void Update()
+    //{
+    //    if (!IsOwner) return;
+
+    //    if (playerInput.currentControlScheme == "Gamepad")
+    //    {
+    //        moveInput = lookAction.ReadValue<Vector2>();
+    //    }
+    //    else
+    //    {
+    //        moveInput = moveAction.ReadValue<Vector2>();
+    //    }
+
+    //    syncedMoveInput.Value = moveInput;
+    //}
 
     void FixedUpdate()
     {
@@ -123,7 +138,7 @@ public class PlayerController : NetworkBehaviour
             { 2, "Sprites/player_yellow" },
             { 3, "Sprites/player_purple" },
         };
-        string playerSprite = playerSprites[(int)OwnerClientId];
+        string playerSprite = playerSprites[playerNumber];
         Sprite resource = Resources.Load<Sprite>(playerSprite);
         GetComponent<SpriteRenderer>().sprite = resource;
     }

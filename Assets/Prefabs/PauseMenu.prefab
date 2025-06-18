@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 8890771534142388332}
   - component: {fileID: 5364280411160769337}
   m_Layer: 5
-  m_Name: Host Game (1)
+  m_Name: Join Game
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

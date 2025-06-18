@@ -45,7 +45,6 @@ public class GrappleGun : NetworkBehaviour
     [SerializeField] private float maxDistance = 10f;
     [SerializeField] private float minDistance = 1f;
 
-    InputAction grapplingHookAction;
     InputAction lookAction;
 
     [Header("Launching:")]
@@ -53,7 +52,6 @@ public class GrappleGun : NetworkBehaviour
     [SerializeField] private float hangDistance = 2f;
 
     private NetworkVariable<Vector2> tongueTarget = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Owner);
-    //private NetworkVariable<Vector2> grappleOffset = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Server);
 
     private Vector2 grappleOffset;
     private GameObject grappleObject = null;
@@ -63,6 +61,8 @@ public class GrappleGun : NetworkBehaviour
     public float minJumpDistance = 2f;
     public float grappleCooldown = 0.25f;
     private float lastGrappleTime = -10f;
+
+    private Vector2 lookPosition;
 
     // https://bitbucket.org/Vespper/grappling-hook/src/master/GrappleRope
 
@@ -75,14 +75,10 @@ public class GrappleGun : NetworkBehaviour
 
     private void Start()
     {
-
         uiController = FindAnyObjectByType<UIController>();
         m_camera = FindAnyObjectByType<Camera>();
         AssignColorToPlayer();
-        grapplingHookAction = InputSystem.actions.FindAction("GrapplingHook");
-        lookAction = InputSystem.actions.FindAction("Look");
         m_lineRenderer.positionCount = precision;
-
     }
 
     private void Update()
@@ -92,7 +88,6 @@ public class GrappleGun : NetworkBehaviour
             moveTime += Time.deltaTime;
             if (IsOwner)
             {
-                CheckGrappleHookAction();
                 UpdateTongueTarget();
             }
             // Does not matter if owner or not, we always draw the tongue
@@ -102,7 +97,7 @@ public class GrappleGun : NetworkBehaviour
 
     private Vector2 GetNormalizedTongueDirection()
     {
-        return (GetLookPos() - (Vector2)transform.position).normalized;
+        return (lookPosition - (Vector2)transform.position).normalized;
     }
 
     // Get the target point for the tongue at the given distance (could be maxDistance or minDistance)
@@ -111,17 +106,6 @@ public class GrappleGun : NetworkBehaviour
         return (Vector2)transform.position + GetNormalizedTongueDirection() * distance;
     }
 
-    private void CheckGrappleHookAction()
-    {
-        if (grapplingHookAction.WasPressedThisFrame() && Time.time - lastGrappleTime >= grappleCooldown)
-        {
-            StartGrapple(GetLookPos());
-        }
-        else if (!grapplingHookAction.IsPressed())
-        {
-            StopGrapple();
-        }
-    }
 
     private void UpdateTongueTarget()
     {
@@ -138,9 +122,39 @@ public class GrappleGun : NetworkBehaviour
         }
     }
 
+    public void OnGrapplingHook(InputAction.CallbackContext context)
+    {
+        if (IsOwner)
+        {
+            if (context.performed && Time.time - lastGrappleTime >= grappleCooldown)
+            {
+                StartGrapple(lookPosition);
+            }
+            else if (context.canceled)
+            {
+                StopGrapple();
+            }
+
+        }
+
+    }
+
+    public void OnLook(InputAction.CallbackContext context)
+    {
+        if (m_player.playerInput.currentControlScheme == "Gamepad")
+        {
+            Vector2 direction = context.ReadValue<Vector2>();
+            lookPosition = (Vector2)transform.position + direction.normalized * maxDistance;
+        }
+        else
+        {
+            lookPosition = m_camera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+        }
+    }
+
     private Vector2 GetLookPos()
     {
-        if (m_player.isUsingGamepad)
+        if (m_player.playerInput.currentControlScheme == "Gamepad")
         {
             Vector2 direction = lookAction.ReadValue<Vector2>();
             return (Vector2)transform.position + direction.normalized * maxDistance;
@@ -227,8 +241,8 @@ public class GrappleGun : NetworkBehaviour
         Vector2 distanceVector = (Vector2)transform.position - point;
         m_rigidbody.AddForce(distanceVector.normalized * jumpForce, ForceMode2D.Force);
         lastGrappleLocation = point;
-
     }
+
 
 
     void OnGrappleMiss(Vector2 distanceVector)
