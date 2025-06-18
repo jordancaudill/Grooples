@@ -1,16 +1,15 @@
-using System.Linq;
+using System.Collections.Generic;
 using Unity.Netcode;
-using UnityEngine;
 
 public class GameManager : NetworkBehaviour
 {
 
-    PlayerController[] players = {};
+    public List<string> players = new List<string>();
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        //NetworkManager.Singleton.StartHost();
+
     }
 
     // Update is called once per frame
@@ -19,12 +18,13 @@ public class GameManager : NetworkBehaviour
         
     }
 
-    public void AddPlayer(PlayerController player) {        
-        players.Append(player);
+    public void AddPlayer(string name) {
+        players.Add(name);
     }
 
-    public void RemovePlayer(PlayerController player) {        
-        players = players.Where(p => p != player).ToArray();
+    public void RemovePlayer(string name)
+    {
+        players.Remove(name);
     }
 
 }

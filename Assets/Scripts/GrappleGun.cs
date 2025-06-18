@@ -69,6 +69,7 @@ public class GrappleGun : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+        AssignColorToPlayer();
 
     }
 
@@ -77,7 +78,6 @@ public class GrappleGun : NetworkBehaviour
     {
         uiController = FindAnyObjectByType<UIController>();
         m_camera = FindAnyObjectByType<Camera>();
-        AssignColorToPlayer();
         m_lineRenderer.positionCount = precision;
     }
 
@@ -419,7 +419,7 @@ public class GrappleGun : NetworkBehaviour
             { 3, "#9576A6" },
         };
 
-        string playerColor = playerColors[(int)OwnerClientId];
+        string playerColor = playerColors[m_player.playerNumber];
         ColorUtility.TryParseHtmlString(playerColor, out Color color);
 
         GetComponent<LineRenderer>().colorGradient = new Gradient

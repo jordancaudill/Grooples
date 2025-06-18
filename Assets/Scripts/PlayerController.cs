@@ -38,12 +38,18 @@ public class PlayerController : NetworkBehaviour
     {
         base.OnNetworkSpawn();
         print(OwnerClientId + " " + IsOwner + " " + IsClient + " " + IsHost + " " + IsServer);
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+        print(gameManager.players.Count);
+        playerNumber = gameManager.players.Count;
+        name = "Player_" + playerNumber;
+        gameManager.AddPlayer(name);
 
     }
 
     void Start()
     {
         print(OwnerClientId + " " + IsOwner + " " + IsClient + " " + IsHost + " " + IsServer);
+
         if (!IsHost && !IsServer && !IsClient)
         {
             // New local player probably joined so we need to spawn the NetworkObject
@@ -51,11 +57,8 @@ public class PlayerController : NetworkBehaviour
             networkObject.Spawn();
         }
         spawnPoint = GameObject.Find("Spawn").transform;
-        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
         playerInputManager = GameObject.Find("PlayerInputManager").GetComponent<PlayerInputManager>();
         transform.position = spawnPoint.position;
-        playerNumber = (int)OwnerClientId + playerInputManager.playerCount - 1;
-        name = "Player_" + playerNumber;
         AssignSpriteToPlayer();
 
         rb = GetComponent<Rigidbody2D>();
