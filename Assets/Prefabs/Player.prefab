@@ -77,10 +77,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  m_lineRenderer: {fileID: 4815119977137823805}
-  m_player: {fileID: 3178409488135413617}
-  precision: 40
-  straightenLineSpeed: 45
+  lineRenderer: {fileID: 4815119977137823805}
+  playerController: {fileID: 3178409488135413617}
+  playerColliders:
+  - {fileID: 2908931020218923627}
+  - {fileID: 701968169404931231}
+  - {fileID: 1232718486844627212}
+  hitLayers:
+    serializedVersion: 2
+    m_Bits: 136
   tongueAnimationCurve:
     serializedVersion: 2
     m_Curve:
@@ -132,11 +137,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  StartWaveSize: 2
-  ignoreColliders:
-  - {fileID: 701968169404931231}
-  - {fileID: 1232718486844627212}
-  - {fileID: 2908931020218923627}
   tongueProgressionCurve:
     serializedVersion: 2
     m_Curve:
@@ -161,19 +161,19 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  startTongueWaveSize: 2
+  straightenLineSpeed: 45
   tongueProgressionSpeed: 40
-  hitLayers:
-    serializedVersion: 2
-    m_Bits: 136
-  m_springJoint2D: {fileID: 1848247816056139402}
-  m_rigidbody: {fileID: 5989748641023836935}
+  tonguePrecisionPoints: 40
+  springJoint2D: {fileID: 1848247816056139402}
+  playerRigidbody: {fileID: 5989748641023836935}
+  grappleCooldown: 0.25
   maxDistance: 10
   minDistance: 0.75
   launchSpeed: 1
   hangDistance: 2
-  jumpForce: 500
-  minJumpDistance: 2
-  grappleCooldown: 0.25
+  popupForce: 500
+  minPopupDistance: 2
 --- !u!120 &4815119977137823805
 LineRenderer:
   serializedVersion: 2
@@ -453,8 +453,8 @@ GameObject:
   - component: {fileID: 1848247816056139402}
   - component: {fileID: 701968169404931231}
   - component: {fileID: 1531998262079415352}
-  - component: {fileID: 554557618220112419}
-  - component: {fileID: 2339864200801438779}
+  - component: {fileID: 8519860186046927629}
+  - component: {fileID: 2750319231540176874}
   m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
@@ -586,6 +586,8 @@ MonoBehaviour:
     m_Bits: 64
   isGrounded: 0
   playerInput: {fileID: 1531998262079415352}
+  playerInputManager: {fileID: 0}
+  playerNumber: 0
 --- !u!50 &5989748641023836935
 Rigidbody2D:
   serializedVersion: 5
@@ -832,7 +834,7 @@ MonoBehaviour:
   m_DefaultActionMap: Player
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
---- !u!114 &554557618220112419
+--- !u!114 &8519860186046927629
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -841,15 +843,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 5401303326408513776}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
+  m_Script: {fileID: 11500000, guid: 5abfce83aadd948498d4990c645a017b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  NetworkTransformExpanded: 0
+  NetworkTransformExpanded: 1
   AutoOwnerAuthorityTickOffset: 1
-  PositionInterpolationType: 1
-  RotationInterpolationType: 1
-  ScaleInterpolationType: 1
+  PositionInterpolationType: 0
+  RotationInterpolationType: 0
+  ScaleInterpolationType: 0
   PositionLerpSmoothing: 1
   PositionMaxInterpolationTime: 0.1
   RotationLerpSmoothing: 1
@@ -861,13 +863,13 @@ MonoBehaviour:
   UseUnreliableDeltas: 0
   SyncPositionX: 1
   SyncPositionY: 1
-  SyncPositionZ: 1
-  SyncRotAngleX: 1
-  SyncRotAngleY: 1
+  SyncPositionZ: 0
+  SyncRotAngleX: 0
+  SyncRotAngleY: 0
   SyncRotAngleZ: 1
-  SyncScaleX: 1
-  SyncScaleY: 1
-  SyncScaleZ: 1
+  SyncScaleX: 0
+  SyncScaleY: 0
+  SyncScaleZ: 0
   PositionThreshold: 0.001
   RotAngleThreshold: 0.01
   ScaleThreshold: 0.01
@@ -876,9 +878,10 @@ MonoBehaviour:
   UseHalfFloatPrecision: 0
   InLocalSpace: 0
   SwitchTransformSpaceWhenParented: 0
-  Interpolate: 1
+  Interpolate: 0
   SlerpPosition: 0
---- !u!114 &2339864200801438779
+  StaleDataHandling: 1
+--- !u!114 &2750319231540176874
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

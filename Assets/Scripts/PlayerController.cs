@@ -37,9 +37,7 @@ public class PlayerController : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-        print(OwnerClientId + " " + IsOwner + " " + IsClient + " " + IsHost + " " + IsServer);
         gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
-        print(gameManager.players.Count);
         playerNumber = gameManager.players.Count;
         name = "Player_" + playerNumber;
         gameManager.AddPlayer(name);
@@ -48,7 +46,7 @@ public class PlayerController : NetworkBehaviour
 
     void Start()
     {
-        print(OwnerClientId + " " + IsOwner + " " + IsClient + " " + IsHost + " " + IsServer);
+        spawnPoint = GameObject.Find("Spawn").transform;
 
         if (!IsHost && !IsServer && !IsClient)
         {
@@ -56,7 +54,6 @@ public class PlayerController : NetworkBehaviour
             networkObject = GetComponent<NetworkObject>();
             networkObject.Spawn();
         }
-        spawnPoint = GameObject.Find("Spawn").transform;
         playerInputManager = GameObject.Find("PlayerInputManager").GetComponent<PlayerInputManager>();
         transform.position = spawnPoint.position;
         AssignSpriteToPlayer();
@@ -87,23 +84,6 @@ public class PlayerController : NetworkBehaviour
 
 
     }
-
-
-    //void Update()
-    //{
-    //    if (!IsOwner) return;
-
-    //    if (playerInput.currentControlScheme == "Gamepad")
-    //    {
-    //        moveInput = lookAction.ReadValue<Vector2>();
-    //    }
-    //    else
-    //    {
-    //        moveInput = moveAction.ReadValue<Vector2>();
-    //    }
-
-    //    syncedMoveInput.Value = moveInput;
-    //}
 
     void FixedUpdate()
     {

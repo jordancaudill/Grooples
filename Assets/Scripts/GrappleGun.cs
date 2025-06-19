@@ -6,120 +6,113 @@ using UnityEngine.InputSystem;
 
 public class GrappleGun : NetworkBehaviour
 {
-    [Header("General References:")]
-    public LineRenderer m_lineRenderer;
-    public PlayerController m_player;
-    private UIController uiController;
+    [Header("General:")]
+    public LineRenderer lineRenderer;
+    public PlayerController playerController;
+    [SerializeField] public Collider2D[] playerColliders;
+    public LayerMask hitLayers;
 
-    [Header("General Settings:")]
-    [SerializeField] private int precision = 40;
-    [Range(0, 50)][SerializeField] private float straightenLineSpeed = 5;
+    private UIController uiController;
+    private Camera playerCamera;
+    private int terrainLayer = 3;
+    private int playersLayer = 7;
 
     [Header("Tongue Animation Settings:")]
     public AnimationCurve tongueAnimationCurve;
-    [Range(0.01f, 4)][SerializeField] private float StartWaveSize = 2;
-    float waveSize = 0;
-
-    // An array of colliders that the tongue should ignore
-    [SerializeField] public Collider2D[] ignoreColliders;
-
-    [Header("Tongue Progression:")]
     public AnimationCurve tongueProgressionCurve;
+
+    [Range(0.01f, 4)][SerializeField] private float startTongueWaveSize = 2;
+    [Range(0, 50)][SerializeField] private float straightenLineSpeed = 5;
     [SerializeField][Range(1, 50)] private float tongueProgressionSpeed = 1;
-
-    private float moveTime = 0;
-
+    [SerializeField] private int tonguePrecisionPoints = 40;
+    InputAction lookAction;
+    private float tongueDrawTime = 0;
+    private float tongueWaveSize = 0;
     private bool straightLine = true;
+    private Vector2 tongueTarget;
+    private Vector2 lastSentTongueTarget;
+    private Vector2 lastGrappleLocation;
+    private float tongueTargetSendInterval = 0.025f; // 40 times per second
+    private float tongueTargetSendTimer = 0f;
+    private float tongueTargetMinChange = 0.01f; // Only send if look dir changes at least this much
 
-    private int terrainLayer = 3;
-    private int playersLayer = 7;
-    public LayerMask hitLayers;
 
-    private Camera m_camera;
-
-    [Header("Physics Ref:")]
-    public SpringJoint2D m_springJoint2D;
-    public Rigidbody2D m_rigidbody;
-
-    [Header("Distance:")]
+    [Header("Physics:")]
+    public SpringJoint2D springJoint2D;
+    public Rigidbody2D playerRigidbody;
+    [SerializeField] private float grappleCooldown = 0.25f;
     [SerializeField] private float maxDistance = 10f;
     [SerializeField] private float minDistance = 1f;
-
-    InputAction lookAction;
-
-    [Header("Launching:")]
     [SerializeField] private float launchSpeed = 1f;
     [SerializeField] private float hangDistance = 2f;
-
-    private NetworkVariable<Vector2> tongueTarget = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Owner);
+    [SerializeField] private float popupForce = 500f;
+    [SerializeField] private float minPopupDistance = 2f;
 
     private Vector2 grappleOffset;
     private GameObject grappleObject = null;
-    private Vector2 lastGrappleLocation;
-
-    public float jumpForce = 500f;
-    public float minJumpDistance = 2f;
-    public float grappleCooldown = 0.25f;
     private float lastGrappleTime = -10f;
 
-    private Vector2 lookPosition;
-
-    // https://bitbucket.org/Vespper/grappling-hook/src/master/GrappleRope
 
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
         AssignColorToPlayer();
-
-    }
-
-
-    private void Start()
-    {
         uiController = FindAnyObjectByType<UIController>();
-        m_camera = FindAnyObjectByType<Camera>();
-        m_lineRenderer.positionCount = precision;
+        playerCamera = FindAnyObjectByType<Camera>();
+        lineRenderer.positionCount = tonguePrecisionPoints;
+        lookAction = playerController.playerInput.actions["Look"];
     }
+
 
     private void Update()
     {
         if (uiController != null && !uiController.isPaused)
         {
-            moveTime += Time.deltaTime;
-            if (IsOwner)
-            {
-                UpdateTongueTarget();
-            }
-            // Does not matter if owner or not, we always draw the tongue
+            tongueDrawTime += Time.deltaTime;
             DrawTongue();
+
+            CheckLookAction();
         }
     }
-
-    private Vector2 GetNormalizedTongueDirection()
-    {
-        return (lookPosition - (Vector2)transform.position).normalized;
-    }
-
-    // Get the target point for the tongue at the given distance (could be maxDistance or minDistance)
-    private Vector2 GetTargetPointAtDistance(float distance)
-    {
-        return (Vector2)transform.position + GetNormalizedTongueDirection() * distance;
-    }
-
-
-    private void UpdateTongueTarget()
+    private void CheckLookAction()
     {
         if (IsOwner)
         {
             if (grappleObject == null)
             {
-                tongueTarget.Value = GetTargetPointAtDistance(minDistance);
+                if (playerController.playerInput.currentControlScheme == "Gamepad")
+                {
+                    tongueTarget = (Vector2)transform.position + (lookAction.ReadValue<Vector2>().normalized * minDistance);
+                }
+                else
+                {
+                    Vector2 lookPosition = playerCamera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+                    tongueTarget = (Vector2)transform.position + (lookPosition - (Vector2)transform.position).normalized * minDistance;
+                }
+
             }
             else
             {
-                tongueTarget.Value = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
+                tongueTarget = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
             }
+
+            // Send the new look direction to the server
+            if (Time.time - tongueTargetSendTimer >= tongueTargetSendInterval && Vector2.Distance(tongueTarget, lastSentTongueTarget) >= tongueTargetMinChange)
+            {
+                lastSentTongueTarget = tongueTarget;
+                tongueTargetSendTimer = Time.time;
+                TongueTargetRpc(tongueTarget);
+
+            }
+
         }
+
+    }
+
+    [Rpc(SendTo.NotOwner)]
+    private void TongueTargetRpc(Vector2 target)
+    {
+        tongueTarget = target;
     }
 
     public void OnGrapplingHook(InputAction.CallbackContext context)
@@ -128,7 +121,7 @@ public class GrappleGun : NetworkBehaviour
         {
             if (context.performed && Time.time - lastGrappleTime >= grappleCooldown)
             {
-                StartGrapple(lookPosition);
+                StartGrapple();
             }
             else if (context.canceled)
             {
@@ -139,35 +132,9 @@ public class GrappleGun : NetworkBehaviour
 
     }
 
-    public void OnLook(InputAction.CallbackContext context)
-    {
-        if (m_player.playerInput.currentControlScheme == "Gamepad")
-        {
-            Vector2 direction = context.ReadValue<Vector2>();
-            lookPosition = (Vector2)transform.position + direction.normalized * maxDistance;
-        }
-        else
-        {
-            lookPosition = m_camera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-        }
-    }
-
-    private Vector2 GetLookPos()
-    {
-        if (m_player.playerInput.currentControlScheme == "Gamepad")
-        {
-            Vector2 direction = lookAction.ReadValue<Vector2>();
-            return (Vector2)transform.position + direction.normalized * maxDistance;
-        }
-        else
-        {
-            return m_camera.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-        }
-    }
-
     private void ToggleColliders(bool enable)
     {
-        foreach (Collider2D collider in ignoreColliders)
+        foreach (Collider2D collider in playerColliders)
         {
             if (collider != null)
             {
@@ -176,11 +143,10 @@ public class GrappleGun : NetworkBehaviour
         }
     }
 
-    private void StartGrapple(Vector2 lookPos)
+    private void StartGrapple()
     {
-        Vector2 distanceVector = lookPos - (Vector2)transform.position;
         ToggleColliders(false);
-        RaycastHit2D _hit = Physics2D.Raycast(transform.position, distanceVector.normalized, maxDistance, hitLayers);
+        RaycastHit2D _hit = Physics2D.Raycast(transform.position, GetNormalizedTongueDirection(), maxDistance, hitLayers);
         ToggleColliders(true);
         if (_hit.transform != null)
         {
@@ -188,7 +154,7 @@ public class GrappleGun : NetworkBehaviour
         }
         else
         {
-            OnGrappleMiss(distanceVector);
+            OnGrappleMiss();
         }
     }
 
@@ -197,7 +163,7 @@ public class GrappleGun : NetworkBehaviour
         if (grappleObject == null) return;
 
         UpdateGrapple(false, null, Vector2.zero);
-        tongueTarget.Value = GetTargetPointAtDistance(minDistance);
+        tongueTarget = GetNormalizedTongueDirection();
         grappleObject = null;
         lastGrappleTime = Time.time;
 
@@ -207,13 +173,12 @@ public class GrappleGun : NetworkBehaviour
     void OnGrappleHit(RaycastHit2D _hit)
     {
         int hitLayer = _hit.transform.gameObject.layer;
-        moveTime = 0;
-        waveSize = StartWaveSize;
+        tongueDrawTime = 0;
+        tongueWaveSize = startTongueWaveSize;
         straightLine = false;
-        //tongueTarget.Value = _hit.point;
 
         float distance = Vector2.Distance(_hit.point, transform.position);
-        if (_hit.transform.gameObject.layer == terrainLayer && m_player.isGrounded && distance <= minJumpDistance)
+        if (_hit.transform.gameObject.layer == terrainLayer && playerController.isGrounded && distance <= minPopupDistance)
         {
             // If the player is grounded and the distance is less than the minimum, pop up the player, do not grapple
             PopupPlayer(_hit.point);
@@ -225,8 +190,8 @@ public class GrappleGun : NetworkBehaviour
             // Get the local position of the hit point on the hit object, so if the object moves, the grapple point will still be correct
             grappleOffset = _hit.transform.InverseTransformPoint(_hit.point);
             grappleObject = _hit.transform.gameObject;
-            tongueTarget.Value = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
-            lastGrappleLocation = tongueTarget.Value;
+            tongueTarget = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
+            lastGrappleLocation = tongueTarget;
 
             // Otherwise, use the hierarchy path
             UpdateGrapple(true, GetHierarchyPath(_hit.transform.gameObject), grappleOffset);
@@ -237,7 +202,7 @@ public class GrappleGun : NetworkBehaviour
     public void PopupPlayer(Vector2 point)
     {
         Vector2 distanceVector = (Vector2)transform.position - point;
-        m_rigidbody.AddForce(distanceVector.normalized * jumpForce, ForceMode2D.Force);
+        playerRigidbody.AddForce(distanceVector.normalized * popupForce, ForceMode2D.Force);
         lastGrappleLocation = point;
 
         if (IsOwner)
@@ -253,20 +218,19 @@ public class GrappleGun : NetworkBehaviour
     }
 
 
-
-    void OnGrappleMiss(Vector2 distanceVector)
+    void OnGrappleMiss()
     {
-        moveTime = 0;
-        waveSize = StartWaveSize;
+        tongueDrawTime = 0;
+        tongueWaveSize = startTongueWaveSize;
         straightLine = false;
-        tongueTarget.Value = GetTargetPointAtDistance(maxDistance);
-        lastGrappleLocation = tongueTarget.Value;
+        tongueTarget = GetTargetPointAtDistance(maxDistance);
+        lastGrappleLocation = tongueTarget;
     }
 
     public void UpdateGrapple(bool enabled, string hierarchyPath, Vector2 localHitPoint)
     {
-        moveTime = 0;
-        waveSize = StartWaveSize;
+        tongueDrawTime = 0;
+        tongueWaveSize = startTongueWaveSize;
         straightLine = false;
 
         if (hierarchyPath != null)
@@ -276,23 +240,23 @@ public class GrappleGun : NetworkBehaviour
 
             if (IsServer)
             {
-                m_springJoint2D.connectedBody = grappleObject.GetComponent<Rigidbody2D>();
-                m_springJoint2D.connectedAnchor = localHitPoint;
+                springJoint2D.connectedBody = grappleObject.GetComponent<Rigidbody2D>();
+                springJoint2D.connectedAnchor = localHitPoint;
             }
         }
         else
         {
-            m_springJoint2D.connectedBody = null;
-            m_springJoint2D.connectedAnchor = Vector2.zero;
+            springJoint2D.connectedBody = null;
+            springJoint2D.connectedAnchor = Vector2.zero;
             grappleObject = null;
             grappleOffset = Vector2.zero;
         }
 
-        m_springJoint2D.enabled = enabled;
-        m_springJoint2D.autoConfigureDistance = false;
-        m_springJoint2D.distance = hangDistance;
-        m_springJoint2D.frequency = launchSpeed;
-            
+        springJoint2D.enabled = enabled;
+        springJoint2D.autoConfigureDistance = false;
+        springJoint2D.distance = hangDistance;
+        springJoint2D.frequency = launchSpeed;
+
         if (IsOwner)
         {
             UpdateGrappleRpc(enabled, hierarchyPath, localHitPoint);
@@ -305,6 +269,109 @@ public class GrappleGun : NetworkBehaviour
     {
         UpdateGrapple(enabled, hierarchyPath, localHitPoint);
     }
+    private void AssignColorToPlayer()
+    {
+        // Assign a color to the player based on the OwnerClientId or any other logic
+        Dictionary<int, string> playerColors = new Dictionary<int, string>
+        {
+            { 0, "#EA61CC" },
+            { 1, "#689581" },
+            { 2, "#E9AC6F" },
+            { 3, "#9576A6" },
+        };
+
+        string playerColor = playerColors[playerController.playerNumber];
+        ColorUtility.TryParseHtmlString(playerColor, out Color color);
+
+        GetComponent<LineRenderer>().colorGradient = new Gradient
+        {
+            colorKeys = new GradientColorKey[]
+            {
+                new GradientColorKey(color, 1f)
+            },
+            alphaKeys = new GradientAlphaKey[]
+            {
+                new GradientAlphaKey(1f, 1f)
+            }
+        };
+    }
+
+    // DRAW TONGUE
+    void DrawTongue()
+    {
+        if (!straightLine)
+        {
+            if (Math.Abs(lineRenderer.GetPosition(tonguePrecisionPoints - 1).x - tongueTarget.x) <= 0.1f && Math.Abs(lineRenderer.GetPosition(tonguePrecisionPoints - 1).y - tongueTarget.y) <= 0.1f)
+            {
+                straightLine = true;
+            }
+            else
+            {
+                DrawTongueWaves(tongueTarget);
+            }
+        }
+        else
+        {
+            if (tongueWaveSize > 0)
+            {
+                tongueWaveSize -= Time.deltaTime * straightenLineSpeed;
+                DrawTongueWaves(tongueTarget);
+            }
+            else
+            {
+                tongueWaveSize = 0;
+                DrawTongueNoWaves(tongueTarget);
+            }
+        }
+    }
+
+    void DrawTongueWaves(Vector2 tongueTarget)
+    {
+        Vector2 grappleDistanceVector = tongueTarget - (Vector2)transform.position;
+
+        for (int i = 0; i < tonguePrecisionPoints; i++)
+        {
+            float delta = i / (tonguePrecisionPoints - 1f);
+            Vector2 offset = Vector2.Perpendicular(grappleDistanceVector).normalized * tongueAnimationCurve.Evaluate(delta) * tongueWaveSize;
+            Vector2 targetPosition, currentPosition;
+            if (grappleObject != null)
+            {
+                targetPosition = Vector2.Lerp(transform.position, tongueTarget, delta) + offset;
+                currentPosition = Vector2.Lerp(transform.position, targetPosition, tongueProgressionCurve.Evaluate(tongueDrawTime) * tongueProgressionSpeed);
+            }
+            else
+            {
+                targetPosition = Vector2.Lerp(transform.position, lastGrappleLocation, delta) + offset;
+                currentPosition = Vector2.Lerp(targetPosition, tongueTarget, tongueProgressionCurve.Evaluate(tongueDrawTime) * tongueProgressionSpeed);
+            }
+
+            lineRenderer.SetPosition(i, currentPosition);
+        }
+    }
+
+    void DrawTongueNoWaves(Vector2 tongueTarget)
+    {
+        lineRenderer.SetPosition(0, transform.position);
+
+        for (int i = 1; i < tonguePrecisionPoints; i++)
+        {
+            lineRenderer.SetPosition(i, tongueTarget);
+        }
+    }
+
+
+    // UTILS
+    private Vector2 GetNormalizedTongueDirection()
+    {
+        return (tongueTarget - (Vector2)transform.position).normalized;
+    }
+
+    // Get the target point for the tongue at the given distance (could be maxDistance or minDistance)
+    private Vector2 GetTargetPointAtDistance(float distance)
+    {
+        return (Vector2)transform.position + GetNormalizedTongueDirection() * distance;
+    }
+
     private static string GetHierarchyPath(GameObject obj)
     {
         if (obj == null)
@@ -355,101 +422,11 @@ public class GrappleGun : NetworkBehaviour
     }
 
 
-
-    void DrawTongue()
-    {
-
-        if (!straightLine)
-        {
-            if (Math.Abs(m_lineRenderer.GetPosition(precision - 1).x - tongueTarget.Value.x) <= 0.1f && Math.Abs(m_lineRenderer.GetPosition(precision - 1).y - tongueTarget.Value.y) <= 0.1f)
-            {
-                straightLine = true;
-            }
-            else
-            {
-                DrawTongueWaves();
-            }
-        }
-        else
-        {
-            if (waveSize > 0)
-            {
-                waveSize -= Time.deltaTime * straightenLineSpeed;
-                DrawTongueWaves();
-            }
-            else
-            {
-                waveSize = 0;
-                DrawTongueNoWaves();
-            }
-        }
-    }
-
-    void DrawTongueWaves()
-    {
-        Vector2 grappleDistanceVector = tongueTarget.Value - (Vector2)transform.position;
-
-        for (int i = 0; i < precision; i++)
-        {
-            float delta = i / (precision - 1f);
-            Vector2 offset = Vector2.Perpendicular(grappleDistanceVector).normalized * tongueAnimationCurve.Evaluate(delta) * waveSize;
-            Vector2 targetPosition, currentPosition;
-            if (grappleObject != null)
-            {
-                targetPosition = Vector2.Lerp(transform.position, tongueTarget.Value, delta) + offset;
-                currentPosition = Vector2.Lerp(transform.position, targetPosition, tongueProgressionCurve.Evaluate(moveTime) * tongueProgressionSpeed);
-            }
-            else
-            {
-                targetPosition = Vector2.Lerp(transform.position, lastGrappleLocation, delta) + offset;
-                currentPosition = Vector2.Lerp(targetPosition, tongueTarget.Value, tongueProgressionCurve.Evaluate(moveTime) * tongueProgressionSpeed);
-            }
-
-            m_lineRenderer.SetPosition(i, currentPosition);
-        }
-    }
-
-    void DrawTongueNoWaves()
-    {
-        m_lineRenderer.SetPosition(0, transform.position);
-
-        for (int i = 1; i < precision; i++)
-        {
-            m_lineRenderer.SetPosition(i, tongueTarget.Value);
-        }
-    }
-
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, maxDistance);
-        Gizmos.DrawWireSphere(tongueTarget.Value, 0.1f);
+        Gizmos.DrawWireSphere(tongueTarget, 0.1f);
     }
 
-    private void AssignColorToPlayer()
-    {
-        // Assign a color to the player based on the OwnerClientId or any other logic
-        Dictionary<int, string> playerColors = new Dictionary<int, string>
-        {
-            { 0, "#EA61CC" },
-            { 1, "#689581" },
-            { 2, "#E9AC6F" },
-            { 3, "#9576A6" },
-        };
-
-        string playerColor = playerColors[m_player.playerNumber];
-        ColorUtility.TryParseHtmlString(playerColor, out Color color);
-
-        GetComponent<LineRenderer>().colorGradient = new Gradient
-        {
-            colorKeys = new GradientColorKey[]
-            {
-                new GradientColorKey(color, 1f)
-            },
-            alphaKeys = new GradientAlphaKey[]
-            {
-                new GradientAlphaKey(1f, 1f)
-            }
-        };
-    }
 }
