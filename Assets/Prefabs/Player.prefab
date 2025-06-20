@@ -453,8 +453,8 @@ GameObject:
   - component: {fileID: 1848247816056139402}
   - component: {fileID: 701968169404931231}
   - component: {fileID: 1531998262079415352}
-  - component: {fileID: 8519860186046927629}
-  - component: {fileID: 2750319231540176874}
+  - component: {fileID: -2869254229462086011}
+  - component: {fileID: -7230841486222275498}
   m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
@@ -611,7 +611,7 @@ Rigidbody2D:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
@@ -834,7 +834,7 @@ MonoBehaviour:
   m_DefaultActionMap: Player
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
---- !u!114 &8519860186046927629
+--- !u!114 &-2869254229462086011
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -843,15 +843,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 5401303326408513776}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5abfce83aadd948498d4990c645a017b, type: 3}
+  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  NetworkTransformExpanded: 1
+  NetworkTransformExpanded: 0
   AutoOwnerAuthorityTickOffset: 1
-  PositionInterpolationType: 0
-  RotationInterpolationType: 0
-  ScaleInterpolationType: 0
+  PositionInterpolationType: 1
+  RotationInterpolationType: 1
+  ScaleInterpolationType: 1
   PositionLerpSmoothing: 1
   PositionMaxInterpolationTime: 0.1
   RotationLerpSmoothing: 1
@@ -878,10 +878,9 @@ MonoBehaviour:
   UseHalfFloatPrecision: 0
   InLocalSpace: 0
   SwitchTransformSpaceWhenParented: 0
-  Interpolate: 0
+  Interpolate: 1
   SlerpPosition: 0
-  StaleDataHandling: 1
---- !u!114 &2750319231540176874
+--- !u!114 &-7230841486222275498
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

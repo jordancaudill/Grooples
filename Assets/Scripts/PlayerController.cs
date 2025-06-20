@@ -91,7 +91,7 @@ public class PlayerController : NetworkBehaviour
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, terrainLayer);
 
         if (!IsServer) return; // Only the server moves the player
-
+        
         if (rb == null) return;
 
         if (CheckOutOfBounds())

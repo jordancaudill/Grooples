@@ -875,7 +875,7 @@ MonoBehaviour:
     Prefabs:
       NetworkPrefabsLists:
       - {fileID: 11400000, guid: b86f1b53c93196241a0c7c695a0c3c1e, type: 2}
-    TickRate: 30
+    TickRate: 64
     ClientConnectionBufferTimeout: 10
     ConnectionApproval: 0
     ConnectionData: 
@@ -1408,8 +1408,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1823984052}
-  - component: {fileID: 1823984051}
   - component: {fileID: 1823984053}
+  - component: {fileID: 1823984051}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1430,6 +1430,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  players: []
 --- !u!4 &1823984052
 Transform:
   m_ObjectHideFlags: 0
@@ -1578,7 +1579,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1900751801
 MonoBehaviour:
   m_ObjectHideFlags: 0

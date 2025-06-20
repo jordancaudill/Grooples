@@ -32,7 +32,7 @@ public class GrappleGun : NetworkBehaviour
     private Vector2 tongueTarget;
     private Vector2 lastSentTongueTarget;
     private Vector2 lastGrappleLocation;
-    private float tongueTargetSendInterval = 0.025f; // 40 times per second
+    private float tongueTargetSendInterval = 0.016667f; // 60 times per second
     private float tongueTargetSendTimer = 0f;
     private float tongueTargetMinChange = 0.01f; // Only send if look dir changes at least this much
 
@@ -66,6 +66,14 @@ public class GrappleGun : NetworkBehaviour
 
     private void Update()
     {
+        // Set the tongue progression speed based on the current network latency
+        if ( NetworkManager.Singleton.NetworkConfig.NetworkTransport != null)
+        {
+            float currentRtt = NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(NetworkManager.Singleton.NetworkConfig.NetworkTransport.ServerClientId);
+            tongueProgressionSpeed = Mathf.Clamp(40f - (currentRtt / 10f), 20f, 40f); // Adjust the range as needed
+            print(tongueProgressionSpeed);
+        }
+
         if (uiController != null && !uiController.isPaused)
         {
             tongueDrawTime += Time.deltaTime;
@@ -117,6 +125,8 @@ public class GrappleGun : NetworkBehaviour
 
     public void OnGrapplingHook(InputAction.CallbackContext context)
     {
+        print(NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(NetworkManager.Singleton.NetworkConfig.NetworkTransport.ServerClientId));
+
         if (IsOwner)
         {
             if (context.performed && Time.time - lastGrappleTime >= grappleCooldown)
@@ -201,20 +211,16 @@ public class GrappleGun : NetworkBehaviour
 
     public void PopupPlayer(Vector2 point)
     {
+        lastGrappleLocation = point;
+        PopupPlayerRpc(point);
+    }
+
+    [Rpc(SendTo.Server)]
+    public void PopupPlayerRpc(Vector2 point)
+    {
         Vector2 distanceVector = (Vector2)transform.position - point;
         playerRigidbody.AddForce(distanceVector.normalized * popupForce, ForceMode2D.Force);
         lastGrappleLocation = point;
-
-        if (IsOwner)
-        {
-            PopupPlayerRpc(point);
-        }
-    }
-
-    [Rpc(SendTo.NotOwner)]
-    public void PopupPlayerRpc(Vector2 point)
-    {
-        PopupPlayer(point);
     }
 
 
