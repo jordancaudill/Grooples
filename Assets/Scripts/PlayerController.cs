@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Windows;
 
 public class PlayerController : NetworkBehaviour
 {
@@ -20,7 +21,7 @@ public class PlayerController : NetworkBehaviour
     public LayerMask boundsLayer;
     private Transform spawnPoint;
 
-    private Rigidbody2D rb;
+    public Rigidbody2D rb;
 
     public bool isGrounded;
     private Vector2 moveInput;
@@ -29,10 +30,14 @@ public class PlayerController : NetworkBehaviour
     public PlayerInput playerInput;
     public PlayerInputManager playerInputManager;
     public int playerNumber;
-    // Sync moveInput from owner to server
-    private NetworkVariable<Vector2> syncedMoveInput = new NetworkVariable<Vector2>(writePerm: NetworkVariableWritePermission.Owner);
+
 
     GameManager gameManager;
+
+    private float reconciliationTime = 0.5f;
+    public Vector2 lastServerPosition;
+    public float lastServerRotation;
+    public Vector2 lastServerVelocity;
 
     public override void OnNetworkSpawn()
     {
@@ -41,12 +46,22 @@ public class PlayerController : NetworkBehaviour
         playerNumber = gameManager.players.Count;
         name = "Player_" + playerNumber;
         gameManager.AddPlayer(name);
+        AssignSpriteToPlayer();
+
+        if (IsServer)
+        {
+            lastServerPosition = rb.position;
+            lastServerRotation = rb.rotation;
+            lastServerVelocity = rb.linearVelocity;
+        }
 
     }
 
     void Start()
     {
+        playerInputManager = GameObject.Find("PlayerInputManager").GetComponent<PlayerInputManager>();
         spawnPoint = GameObject.Find("Spawn").transform;
+        rb.position = spawnPoint.position;
 
         if (!IsHost && !IsServer && !IsClient)
         {
@@ -54,11 +69,6 @@ public class PlayerController : NetworkBehaviour
             networkObject = GetComponent<NetworkObject>();
             networkObject.Spawn();
         }
-        playerInputManager = GameObject.Find("PlayerInputManager").GetComponent<PlayerInputManager>();
-        transform.position = spawnPoint.position;
-        AssignSpriteToPlayer();
-
-        rb = GetComponent<Rigidbody2D>();
     }
 
 
@@ -68,7 +78,6 @@ public class PlayerController : NetworkBehaviour
         if (playerInput.currentControlScheme == "Gamepad")
         {
             moveInput = context.ReadValue<Vector2>();
-            syncedMoveInput.Value = moveInput;
         }
 
     }
@@ -79,7 +88,6 @@ public class PlayerController : NetworkBehaviour
         if (playerInput.currentControlScheme != "Gamepad")
         {
             moveInput = context.ReadValue<Vector2>();
-            syncedMoveInput.Value = moveInput;
         }
 
 
@@ -87,25 +95,95 @@ public class PlayerController : NetworkBehaviour
 
     void FixedUpdate()
     {
-        // Check if grounded
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, terrainLayer);
-
-        if (!IsServer) return; // Only the server moves the player
-        
         if (rb == null) return;
 
-        if (CheckOutOfBounds())
-        {
-            rb.position = spawnPoint.position; // Reset position if out of bounds
-            rb.linearVelocity = Vector2.zero;
-        }
-        else
-        {
+        ReconcileTransform();
 
-            // Apply horizontal movement based on most recent synced input
-            rb.AddForce(new Vector2(syncedMoveInput.Value.x * moveSpeed, 0), ForceMode2D.Force);
+        if (IsOwner)
+        {
+            // Check if grounded
+            isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, terrainLayer);
+
+            if (CheckOutOfBounds())
+            {
+                UpdatePlayerTransformPredictive(spawnPoint.position, 0f, Vector2.zero);
+            }
+            MovePlayerPredictive(moveInput);
+            
+        }
+
+
+    }
+
+    // Position and Rotation Reconciliation
+    private void ReconcileTransform()
+    {
+        if (!IsServer)
+        {
+            // On non-owner clients, interpolate to server position for smoothness
+            rb.position = Vector3.Lerp(transform.position, lastServerPosition, reconciliationTime);
+            rb.rotation = Mathf.LerpAngle(rb.rotation, lastServerRotation, reconciliationTime);
+            rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, lastServerVelocity, reconciliationTime);
+        }
+
+    }
+
+    // MovePlayer
+    public void MovePlayer(Vector2 input)
+    {
+        rb.AddForce(new Vector2(input.x * moveSpeed, 0), ForceMode2D.Force);
+    }
+
+    public void MovePlayerPredictive(Vector2 input)
+    {
+        if (IsOwner)
+        {
+            MovePlayer(input);
+            MovePlayerServerRpc(input);
         }
     }
+
+    [Rpc(SendTo.Server)]
+    public void MovePlayerServerRpc(Vector2 input)
+    {
+        MovePlayer(input);
+        UpdatePlayerTransformClientRpc(rb.position, rb.rotation, rb.linearVelocity);
+    }
+
+    // UpdatePlayerTransform
+    public void UpdatePlayerTransform(Vector2 newPosition, float newRotation, Vector2 newVelocity)
+    {
+        rb.position = newPosition;
+        rb.rotation = newRotation;
+        rb.linearVelocity = newVelocity;
+    }
+
+    public void UpdatePlayerTransformPredictive(Vector2 newPosition, float newRotation, Vector2 newVelocity)
+    {
+        if (IsOwner)
+        {
+            UpdatePlayerTransform(newPosition, newRotation, newVelocity);
+            UpdatePlayerTransformServerRpc(newPosition, newRotation, newVelocity);
+        }
+    }
+
+    [Rpc(SendTo.Server)]
+    public void UpdatePlayerTransformServerRpc(Vector2 newPosition, float newRotation, Vector2 newVelocity)
+    {
+        UpdatePlayerTransform(newPosition, newRotation, newVelocity);
+        UpdatePlayerTransformClientRpc(newPosition, newRotation, newVelocity);
+    }
+
+    // Reusable
+    [Rpc(SendTo.NotServer)]
+    public void UpdatePlayerTransformClientRpc(Vector2 serverPosition, float serverRotation, Vector2 serverVelocity)
+    {
+        lastServerPosition = serverPosition;
+        lastServerRotation = serverRotation;
+        lastServerVelocity = serverVelocity;
+    }
+
+
 
     bool CheckOutOfBounds()
     {

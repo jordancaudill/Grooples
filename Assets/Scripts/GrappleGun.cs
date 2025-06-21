@@ -71,7 +71,7 @@ public class GrappleGun : NetworkBehaviour
         {
             float currentRtt = NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(NetworkManager.Singleton.NetworkConfig.NetworkTransport.ServerClientId);
             tongueProgressionSpeed = Mathf.Clamp(40f - (currentRtt / 10f), 20f, 40f); // Adjust the range as needed
-            print(tongueProgressionSpeed);
+            //print(tongueProgressionSpeed);
         }
 
         if (uiController != null && !uiController.isPaused)
@@ -191,7 +191,7 @@ public class GrappleGun : NetworkBehaviour
         if (_hit.transform.gameObject.layer == terrainLayer && playerController.isGrounded && distance <= minPopupDistance)
         {
             // If the player is grounded and the distance is less than the minimum, pop up the player, do not grapple
-            PopupPlayer(_hit.point);
+            PopupPlayerPredictive(_hit.point);
         }
         else if (_hit.transform.gameObject.layer == terrainLayer || _hit.transform.gameObject.layer == playersLayer)
         {
@@ -211,17 +211,31 @@ public class GrappleGun : NetworkBehaviour
 
     public void PopupPlayer(Vector2 point)
     {
-        lastGrappleLocation = point;
-        PopupPlayerRpc(point);
-    }
-
-    [Rpc(SendTo.Server)]
-    public void PopupPlayerRpc(Vector2 point)
-    {
         Vector2 distanceVector = (Vector2)transform.position - point;
         playerRigidbody.AddForce(distanceVector.normalized * popupForce, ForceMode2D.Force);
         lastGrappleLocation = point;
     }
+
+    public void PopupPlayerPredictive(Vector2 point)
+    {
+        if (IsOwner)
+        {
+            PopupPlayer(point);
+            PopupPlayerServerRpc(point);
+        }
+        
+
+    }
+
+    [Rpc(SendTo.Server)]
+    public void PopupPlayerServerRpc(Vector2 point)
+    {
+        PopupPlayer(point);
+
+        playerController.UpdatePlayerTransformClientRpc(playerController.rb.position, playerController.rb.rotation, playerController.rb.linearVelocity);
+    }
+
+
 
 
     void OnGrappleMiss()
