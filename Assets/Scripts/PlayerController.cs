@@ -149,8 +149,20 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner && !IsServer)
         {
+
+            //If we've teleported the player, snap to the position and rotation
+            if (stateSnapshot.velocity == Vector2.zero && stateSnapshot.angularVelocity == 0f)
+            {
+                rb.position = stateSnapshot.position;
+                rb.rotation = stateSnapshot.rotation;
+                rb.linearVelocity = stateSnapshot.velocity;
+                rb.angularVelocity = stateSnapshot.angularVelocity;
+                return;
+            }
+
             rb.position = Vector2.Lerp(rb.position, stateSnapshot.position, 0.5f);
             rb.rotation = Mathf.LerpAngle(rb.rotation, stateSnapshot.rotation, 0.5f);
+
         }
 
     }
