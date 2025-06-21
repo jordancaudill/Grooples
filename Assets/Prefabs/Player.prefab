@@ -48,7 +48,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &3474841915143312180
 Transform:
   m_ObjectHideFlags: 0
@@ -166,7 +166,6 @@ MonoBehaviour:
   tongueProgressionSpeed: 40
   tonguePrecisionPoints: 40
   springJoint2D: {fileID: 1848247816056139402}
-  playerRigidbody: {fileID: 5989748641023836935}
   grappleCooldown: 0.25
   maxDistance: 10
   minDistance: 0.75
@@ -375,7 +374,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4497821812920847409
 Transform:
   m_ObjectHideFlags: 0
@@ -572,7 +571,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  moveSpeed: 5
+  moveSpeed: 9
   grappleGun: {fileID: 5956600060790071398}
   groundCheck: {fileID: 848539737081547878}
   groundCheckRadius: 0.5
@@ -587,9 +586,6 @@ MonoBehaviour:
   playerInput: {fileID: 1531998262079415352}
   playerInputManager: {fileID: 0}
   playerNumber: 0
-  lastServerPosition: {x: 0, y: 0}
-  lastServerRotation: 0
-  lastServerVelocity: {x: 0, y: 0}
 --- !u!50 &5989748641023836935
 Rigidbody2D:
   serializedVersion: 5
@@ -613,7 +609,7 @@ Rigidbody2D:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0

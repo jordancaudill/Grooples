@@ -39,7 +39,6 @@ public class GrappleGun : NetworkBehaviour
 
     [Header("Physics:")]
     public SpringJoint2D springJoint2D;
-    public Rigidbody2D playerRigidbody;
     [SerializeField] private float grappleCooldown = 0.25f;
     [SerializeField] private float maxDistance = 10f;
     [SerializeField] private float minDistance = 1f;
@@ -71,7 +70,6 @@ public class GrappleGun : NetworkBehaviour
         {
             float currentRtt = NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(NetworkManager.Singleton.NetworkConfig.NetworkTransport.ServerClientId);
             tongueProgressionSpeed = Mathf.Clamp(40f - (currentRtt / 10f), 20f, 40f); // Adjust the range as needed
-            //print(tongueProgressionSpeed);
         }
 
         if (uiController != null && !uiController.isPaused)
@@ -125,8 +123,6 @@ public class GrappleGun : NetworkBehaviour
 
     public void OnGrapplingHook(InputAction.CallbackContext context)
     {
-        print(NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(NetworkManager.Singleton.NetworkConfig.NetworkTransport.ServerClientId));
-
         if (IsOwner)
         {
             if (context.performed && Time.time - lastGrappleTime >= grappleCooldown)
@@ -212,7 +208,7 @@ public class GrappleGun : NetworkBehaviour
     public void PopupPlayer(Vector2 point)
     {
         Vector2 distanceVector = (Vector2)transform.position - point;
-        playerRigidbody.AddForce(distanceVector.normalized * popupForce, ForceMode2D.Force);
+        playerController.rb.AddForce(distanceVector.normalized * popupForce, ForceMode2D.Force);
         lastGrappleLocation = point;
     }
 
@@ -220,21 +216,20 @@ public class GrappleGun : NetworkBehaviour
     {
         if (IsOwner)
         {
-            PopupPlayer(point);
+            if (!IsServer)
+            {
+                PopupPlayer(point);
+            }
             PopupPlayerServerRpc(point);
         }
-        
-
     }
 
     [Rpc(SendTo.Server)]
     public void PopupPlayerServerRpc(Vector2 point)
     {
         PopupPlayer(point);
-
-        playerController.UpdatePlayerTransformClientRpc(playerController.rb.position, playerController.rb.rotation, playerController.rb.linearVelocity);
+        //playerController.UpdatePlayerStateClientRpc(playerController.rb.position, playerController.rb.rotation, playerController.rb.linearVelocity, playerController.rb.angularVelocity, playerController.localInputSequence);
     }
-
 
 
 
