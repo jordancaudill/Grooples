@@ -32,8 +32,12 @@ public class PlayerController : NetworkBehaviour
     public PlayerInput playerInput;
     public PlayerInputManager playerInputManager;
     public int playerNumber;
+    [SerializeField] private float popupForce = 500f;
+    [SerializeField] private float reconciliationVelocityThreshold = 3f;
 
-    private Vector2 upcomingInput;
+
+    // Pending movement inputs
+    private Vector2 pendingInput;
 
     GameManager gameManager;
 
@@ -118,6 +122,11 @@ public class PlayerController : NetworkBehaviour
         if (rb == null) return;
 
 
+        if (grappleGun.pendingPopup)
+        {
+            PopupPlayer(grappleGun.lastGrappleLocation);
+        }
+
         if (IsOwner)
         {
             // Check if grounded
@@ -170,10 +179,10 @@ public class PlayerController : NetworkBehaviour
             if (IsServer)
             {
                 // Server but not owner
-                if (upcomingInput != Vector2.zero)
+                if (pendingInput != Vector2.zero)
                 {
-                    MovePlayer(upcomingInput);
-                    upcomingInput = Vector2.zero;
+                    MovePlayer(pendingInput);
+                    pendingInput = Vector2.zero;
                 }
                 MovePlayerClientRpc(new StateSnapshot
                 {
@@ -223,21 +232,24 @@ public class PlayerController : NetworkBehaviour
     {
         float error = Vector2.Distance(rb.position, serverSnapshot.position);
         float rotError = Mathf.Abs(Mathf.DeltaAngle(rb.rotation, serverSnapshot.rotation));
-
         // Snap if error is very large, otherwise smooth
-        if (error > 3f || rotError > 60f)
+        if (error > 9f)
         {
+            print("snapping");
             rb.position = serverSnapshot.position;
             rb.rotation = serverSnapshot.rotation;
+            rb.linearVelocity = serverSnapshot.velocity;
+            rb.angularVelocity = serverSnapshot.angularVelocity;
         }
-        else if (error > 1.5f || rotError > 25f)
+        else if (error > 0.5f)
         {
             rb.position = Vector2.Lerp(rb.position, serverSnapshot.position, 0.5f);
             rb.rotation = Mathf.LerpAngle(rb.rotation, serverSnapshot.rotation, 0.5f);
+            rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, serverSnapshot.velocity, 0.5f);
+            rb.angularVelocity = Mathf.Lerp(rb.angularVelocity, serverSnapshot.angularVelocity, 0.1f);
         }
 
-        rb.linearVelocity = serverSnapshot.velocity;
-        rb.angularVelocity = serverSnapshot.angularVelocity;
+
 
         ClearSnapshot();
     }
@@ -254,6 +266,15 @@ public class PlayerController : NetworkBehaviour
         };
     }
 
+    public void PopupPlayer(Vector2 point)
+    {
+        Vector2 distanceVector = (Vector2)grappleGun.transform.position - point;
+        rb.AddForce(distanceVector.normalized * popupForce, ForceMode2D.Force);
+        grappleGun.pendingPopup = false;
+
+    }
+
+
     /////////////////////// MovePlayer
     public void MovePlayer(Vector2 input)
     {
@@ -264,7 +285,7 @@ public class PlayerController : NetworkBehaviour
     [Rpc(SendTo.Server)]
     public void MovePlayerServerRpc(Vector2 input)
     {
-        upcomingInput = input;
+        pendingInput = input;
     }
 
     [Rpc(SendTo.NotServer)]

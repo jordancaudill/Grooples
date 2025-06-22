@@ -32,7 +32,7 @@ public class GrappleGun : NetworkBehaviour
     private bool straightLine = true;
     private Vector2 tongueTarget;
     private Vector2 lastSentTongueTarget;
-    private Vector2 lastGrappleLocation;
+    public Vector2 lastGrappleLocation;
     private float tongueTargetSendInterval = 0.016667f; // 60 times per second
     private float tongueTargetSendTimer = 0f;
     private float tongueTargetMinChange = 0.01f; // Only send if look dir changes at least this much
@@ -45,14 +45,13 @@ public class GrappleGun : NetworkBehaviour
     [SerializeField] private float minDistance = 1f;
     [SerializeField] private float launchSpeed = 1f;
     [SerializeField] private float hangDistance = 2f;
-    [SerializeField] private float popupForce = 500f;
     [SerializeField] private float minPopupDistance = 2f;
 
+    public bool pendingPopup;
     private Vector2 grappleOffset;
     private GameObject grappleObject = null;
     private float lastGrappleTime = -10f;
 
-    private bool popupPending;
 
 
     public override void OnNetworkSpawn()
@@ -71,11 +70,6 @@ public class GrappleGun : NetworkBehaviour
     private void FixedUpdate()
     {
         if (playerController.rb == null) return;
-
-        if (popupPending)
-        {
-            PopupPlayer(lastGrappleLocation);
-        }
 
 
     }
@@ -205,7 +199,7 @@ public class GrappleGun : NetworkBehaviour
         {
             // If the player is grounded and the distance is less than the minimum, pop up the player, do not grapple
             lastGrappleLocation = _hit.point;
-            popupPending = true;
+            pendingPopup = true;
             if (!IsServer)
             {
                 PopupPlayerServerRpc(lastGrappleLocation);
@@ -229,20 +223,13 @@ public class GrappleGun : NetworkBehaviour
     }
 
     // PopupPlayer ///////////////////////////////////
-    public void PopupPlayer(Vector2 point)
-    {
-        Vector2 distanceVector = (Vector2)transform.position - point;
-        playerController.rb.AddForce(distanceVector.normalized * popupForce, ForceMode2D.Force);
-        popupPending = false;
-
-    }
 
 
     [Rpc(SendTo.Server)]
     public void PopupPlayerServerRpc(Vector2 point)
     {
         lastGrappleLocation = point;
-        popupPending = true;
+        pendingPopup = true;
     }
 
     [Rpc(SendTo.NotServer)]
