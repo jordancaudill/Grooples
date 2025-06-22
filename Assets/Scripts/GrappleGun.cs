@@ -72,14 +72,11 @@ public class GrappleGun : NetworkBehaviour
     {
         if (playerController.rb == null) return;
 
-        if (IsOwner)
+        if (popupPending)
         {
-            if (popupPending)
-            {
-                //PopupPlayerPredictive(lastGrappleLocation);
-            }
-
+            PopupPlayer(lastGrappleLocation);
         }
+
 
     }
 
@@ -209,6 +206,11 @@ public class GrappleGun : NetworkBehaviour
             // If the player is grounded and the distance is less than the minimum, pop up the player, do not grapple
             lastGrappleLocation = _hit.point;
             popupPending = true;
+            if (!IsServer)
+            {
+                PopupPlayerServerRpc(lastGrappleLocation);
+            }
+
         }
         else if (_hit.transform.gameObject.layer == terrainLayer || _hit.transform.gameObject.layer == playersLayer)
         {
@@ -235,44 +237,18 @@ public class GrappleGun : NetworkBehaviour
 
     }
 
-    public void PopupPlayerPredictive(Vector2 point)
-    {
-        if (IsOwner)
-        {
-            PopupPlayerServerRpc(point);
-
-            if (!IsServer)
-            {
-                PopupPlayer(point);
-            }
-        }
-    }
 
     [Rpc(SendTo.Server)]
     public void PopupPlayerServerRpc(Vector2 point)
     {
-        PopupPlayer(point);
-        PopupPlayerClientRpc(new StateSnapshot
-        {
-            position = playerController.rb.position,
-            rotation = playerController.rb.rotation,
-            velocity = playerController.rb.linearVelocity,
-            angularVelocity = playerController.rb.angularVelocity,
-            timestamp = Time.time
-        });
+        lastGrappleLocation = point;
+        popupPending = true;
     }
 
     [Rpc(SendTo.NotServer)]
     public void PopupPlayerClientRpc(StateSnapshot snapshot)
     {
-        if (IsOwner)
-        {
-            playerController.ReconcileTransform(snapshot);
-        }
-        else
-        {
-            playerController.stateSnapshot = snapshot;
-        }
+        playerController.stateSnapshot = snapshot;
 
     }
 

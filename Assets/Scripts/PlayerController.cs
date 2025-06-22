@@ -270,14 +270,7 @@ public class PlayerController : NetworkBehaviour
     [Rpc(SendTo.NotServer)]
     public void MovePlayerClientRpc(StateSnapshot snapshot)
     {
-        //if (IsOwner)
-        //{
-        //    ReconcileTransform(snapshot);
-        //}
-        //else
-        //{
         stateSnapshot = snapshot;
-        //}
     }
 
     /////////////////////// UpdatePlayerTransform
@@ -300,14 +293,7 @@ public class PlayerController : NetworkBehaviour
     [Rpc(SendTo.NotServer)]
     public void UpdatePlayerTransformClientRpc(StateSnapshot snapshot)
     {
-        //if (IsOwner)
-        //{
-        //    ReconcileTransform(snapshot);
-        //}
-        //else
-        //{
         stateSnapshot = snapshot;
-        //}
     }
 
 
