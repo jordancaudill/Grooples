@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using static PlayerController;
 
 public class GrappleGun : NetworkBehaviour
 {
@@ -51,6 +52,8 @@ public class GrappleGun : NetworkBehaviour
     private GameObject grappleObject = null;
     private float lastGrappleTime = -10f;
 
+    private bool popupPending;
+
 
     public override void OnNetworkSpawn()
     {
@@ -60,13 +63,30 @@ public class GrappleGun : NetworkBehaviour
         playerCamera = FindAnyObjectByType<Camera>();
         lineRenderer.positionCount = tonguePrecisionPoints;
         lookAction = playerController.playerInput.actions["Look"];
+        float currentRtt = NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(NetworkManager.Singleton.NetworkConfig.NetworkTransport.ServerClientId);
+        print(currentRtt);
+
     }
 
+    private void FixedUpdate()
+    {
+        if (playerController.rb == null) return;
+
+        if (IsOwner)
+        {
+            if (popupPending)
+            {
+                //PopupPlayerPredictive(lastGrappleLocation);
+            }
+
+        }
+
+    }
 
     private void Update()
     {
         // Set the tongue progression speed based on the current network latency
-        if ( NetworkManager.Singleton.NetworkConfig.NetworkTransport != null)
+        if (NetworkManager.Singleton.NetworkConfig.NetworkTransport != null)
         {
             float currentRtt = NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(NetworkManager.Singleton.NetworkConfig.NetworkTransport.ServerClientId);
             tongueProgressionSpeed = Mathf.Clamp(40f - (currentRtt / 10f), 20f, 40f); // Adjust the range as needed
@@ -187,7 +207,8 @@ public class GrappleGun : NetworkBehaviour
         if (_hit.transform.gameObject.layer == terrainLayer && playerController.isGrounded && distance <= minPopupDistance)
         {
             // If the player is grounded and the distance is less than the minimum, pop up the player, do not grapple
-            PopupPlayerPredictive(_hit.point);
+            lastGrappleLocation = _hit.point;
+            popupPending = true;
         }
         else if (_hit.transform.gameObject.layer == terrainLayer || _hit.transform.gameObject.layer == playersLayer)
         {
@@ -205,22 +226,25 @@ public class GrappleGun : NetworkBehaviour
         }
     }
 
+    // PopupPlayer ///////////////////////////////////
     public void PopupPlayer(Vector2 point)
     {
         Vector2 distanceVector = (Vector2)transform.position - point;
         playerController.rb.AddForce(distanceVector.normalized * popupForce, ForceMode2D.Force);
-        lastGrappleLocation = point;
+        popupPending = false;
+
     }
 
     public void PopupPlayerPredictive(Vector2 point)
     {
         if (IsOwner)
         {
+            PopupPlayerServerRpc(point);
+
             if (!IsServer)
             {
                 PopupPlayer(point);
             }
-            PopupPlayerServerRpc(point);
         }
     }
 
@@ -228,10 +252,31 @@ public class GrappleGun : NetworkBehaviour
     public void PopupPlayerServerRpc(Vector2 point)
     {
         PopupPlayer(point);
-        //playerController.UpdatePlayerStateClientRpc(playerController.rb.position, playerController.rb.rotation, playerController.rb.linearVelocity, playerController.rb.angularVelocity, playerController.localInputSequence);
+        PopupPlayerClientRpc(new StateSnapshot
+        {
+            position = playerController.rb.position,
+            rotation = playerController.rb.rotation,
+            velocity = playerController.rb.linearVelocity,
+            angularVelocity = playerController.rb.angularVelocity,
+            timestamp = Time.time
+        });
     }
 
+    [Rpc(SendTo.NotServer)]
+    public void PopupPlayerClientRpc(StateSnapshot snapshot)
+    {
+        if (IsOwner)
+        {
+            playerController.ReconcileTransform(snapshot);
+        }
+        else
+        {
+            playerController.stateSnapshot = snapshot;
+        }
 
+    }
+
+    /////////////////////////////////////////
 
     void OnGrappleMiss()
     {
@@ -253,7 +298,7 @@ public class GrappleGun : NetworkBehaviour
             grappleObject = FindByHierarchyPath(hierarchyPath);
             grappleOffset = localHitPoint;
 
-            if (IsServer)
+            if (IsServer || IsOwner)
             {
                 springJoint2D.connectedBody = grappleObject.GetComponent<Rigidbody2D>();
                 springJoint2D.connectedAnchor = localHitPoint;
@@ -272,18 +317,32 @@ public class GrappleGun : NetworkBehaviour
         springJoint2D.distance = hangDistance;
         springJoint2D.frequency = launchSpeed;
 
-        if (IsOwner)
+        if (IsOwner && !IsServer)
         {
-            UpdateGrappleRpc(enabled, hierarchyPath, localHitPoint);
+            UpdateGrappleServerRpc(enabled, hierarchyPath, localHitPoint);
         }
     }
 
 
-    [Rpc(SendTo.NotOwner)]
-    public void UpdateGrappleRpc(bool enabled, string hierarchyPath, Vector2 localHitPoint)
+    [Rpc(SendTo.Server)]
+    public void UpdateGrappleServerRpc(bool enabled, string hierarchyPath, Vector2 localHitPoint)
     {
         UpdateGrapple(enabled, hierarchyPath, localHitPoint);
     }
+
+    //[Rpc(SendTo.NotServer)]
+    //public void UpdateGrappleClientRpc(StateSnapshot snapshot)
+    //{
+    //    if (IsOwner)
+    //    {
+    //        ReconcileTransform(snapshot);
+    //    }
+    //    else
+    //    {
+    //        stateSnapshot = snapshot;
+    //    }
+    //}
+
     private void AssignColorToPlayer()
     {
         // Assign a color to the player based on the OwnerClientId or any other logic

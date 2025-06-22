@@ -3,6 +3,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
+using UnityEngine.Windows;
 
 
 public class PlayerController : NetworkBehaviour
@@ -32,6 +33,8 @@ public class PlayerController : NetworkBehaviour
     public PlayerInputManager playerInputManager;
     public int playerNumber;
 
+    private Vector2 upcomingInput;
+
     GameManager gameManager;
 
     //private Queue<StateSnapshot> stateBuffer = new Queue<StateSnapshot>();
@@ -54,8 +57,14 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    private StateSnapshot stateSnapshot;
-
+    public StateSnapshot stateSnapshot = new StateSnapshot
+    {
+        position = Vector2.zero,
+        rotation = 0f,
+        velocity = Vector2.zero,
+        angularVelocity = 0f,
+        timestamp = 0f
+    };
 
     public override void OnNetworkSpawn()
     {
@@ -65,14 +74,6 @@ public class PlayerController : NetworkBehaviour
         name = "Player_" + playerNumber;
         gameManager.AddPlayer(name);
         AssignSpriteToPlayer();
-
-        //if (IsServer)
-        //{
-        //    lastServerPosition = rb.position;
-        //    lastServerRotation = rb.rotation;
-        //    lastServerVelocity = rb.linearVelocity;
-        //    lastServerAngularVelocity = rb.angularVelocity;
-        //}
 
     }
 
@@ -133,13 +134,64 @@ public class PlayerController : NetworkBehaviour
                     timestamp = Time.time
                 });
             }
-            MovePlayerPredictive(moveInput);
+
+
+            if (IsServer)
+            {
+                // Owner and server
+                // Move and update all clients
+                MovePlayer(moveInput);
+                MovePlayerClientRpc(new StateSnapshot
+                {
+                    position = rb.position,
+                    rotation = rb.rotation,
+                    velocity = rb.linearVelocity,
+                    angularVelocity = rb.angularVelocity,
+                    timestamp = Time.time
+                });
+
+            }
+            else
+            {
+                // Owner but not server
+                // Move locally for responsiveness, then send input to server for validation
+                if (stateSnapshot.timestamp != 0f)
+                {
+                    ReconcileTransform(stateSnapshot);
+                }
+                MovePlayer(moveInput);
+                MovePlayerServerRpc(moveInput);
+
+            }
 
         }
-        else if (!IsOwner && !IsServer)
+        else
         {
-            InterpolateTransform();
+            if (IsServer)
+            {
+                // Server but not owner
+                if (upcomingInput != Vector2.zero)
+                {
+                    MovePlayer(upcomingInput);
+                    upcomingInput = Vector2.zero;
+                }
+                MovePlayerClientRpc(new StateSnapshot
+                {
+                    position = rb.position,
+                    rotation = rb.rotation,
+                    velocity = rb.linearVelocity,
+                    angularVelocity = rb.angularVelocity,
+                    timestamp = Time.time
+                });
+
+            }
+            else
+            {
+                // Not owner and not server
+                InterpolateTransform();
+            }
         }
+
 
 
     }
@@ -162,35 +214,44 @@ public class PlayerController : NetworkBehaviour
 
             rb.position = Vector2.Lerp(rb.position, stateSnapshot.position, 0.5f);
             rb.rotation = Mathf.LerpAngle(rb.rotation, stateSnapshot.rotation, 0.5f);
-
+            // maybe should try MovePosition and MoveRotation again ?
         }
 
     }
 
-    private void ReconcileTransform(StateSnapshot serverSnapshot)
+    public void ReconcileTransform(StateSnapshot serverSnapshot)
     {
-        if (IsOwner)
+        float error = Vector2.Distance(rb.position, serverSnapshot.position);
+        float rotError = Mathf.Abs(Mathf.DeltaAngle(rb.rotation, serverSnapshot.rotation));
+
+        // Snap if error is very large, otherwise smooth
+        if (error > 3f || rotError > 60f)
         {
-            // Reconcile position
-            float error = Vector2.Distance(rb.position, serverSnapshot.position);
-            if (error > 0.1f)
-            {
-                // Smoothly correct position to authoritative server state
-                rb.position = Vector2.Lerp(rb.position, serverSnapshot.position, 0.5f);
-            }
-
-            //  Reconcile rotation 
-            float rotError = Mathf.Abs(Mathf.DeltaAngle(rb.rotation, serverSnapshot.rotation));
-            if (rotError > 5f)
-            {
-                rb.rotation = Mathf.LerpAngle(rb.rotation, serverSnapshot.rotation, 0.5f);
-            }
-
-            // Reconcile velocity
-            rb.linearVelocity = serverSnapshot.velocity;
-            // Reconcile angular velocity
-            rb.angularVelocity = serverSnapshot.angularVelocity;
+            rb.position = serverSnapshot.position;
+            rb.rotation = serverSnapshot.rotation;
         }
+        else if (error > 1.5f || rotError > 25f)
+        {
+            rb.position = Vector2.Lerp(rb.position, serverSnapshot.position, 0.5f);
+            rb.rotation = Mathf.LerpAngle(rb.rotation, serverSnapshot.rotation, 0.5f);
+        }
+
+        rb.linearVelocity = serverSnapshot.velocity;
+        rb.angularVelocity = serverSnapshot.angularVelocity;
+
+        ClearSnapshot();
+    }
+
+    private void ClearSnapshot()
+    {
+        stateSnapshot = new StateSnapshot
+        {
+            position = Vector2.zero,
+            rotation = 0f,
+            velocity = Vector2.zero,
+            angularVelocity = 0f,
+            timestamp = 0f
+        };
     }
 
     /////////////////////// MovePlayer
@@ -199,43 +260,24 @@ public class PlayerController : NetworkBehaviour
         rb.AddForce(new Vector2(input.x * moveSpeed, 0), ForceMode2D.Force);
     }
 
-    public void MovePlayerPredictive(Vector2 input)
-    {
-        if (IsOwner)
-        {
-            MovePlayerServerRpc(input);
-            if (!IsServer)
-            {
-                MovePlayer(input);
-            }
-        }
-    }
 
     [Rpc(SendTo.Server)]
     public void MovePlayerServerRpc(Vector2 input)
     {
-        MovePlayer(input);
-        MovePlayerClientRpc(new StateSnapshot
-        {
-            position = rb.position,
-            rotation = rb.rotation,
-            velocity = rb.linearVelocity,
-            angularVelocity = rb.angularVelocity,
-            timestamp = Time.time
-        });
+        upcomingInput = input;
     }
 
     [Rpc(SendTo.NotServer)]
     public void MovePlayerClientRpc(StateSnapshot snapshot)
     {
-        if (IsOwner)
-        {
-            ReconcileTransform(snapshot);
-        }
-        else
-        {
-            stateSnapshot = snapshot;
-        }
+        //if (IsOwner)
+        //{
+        //    ReconcileTransform(snapshot);
+        //}
+        //else
+        //{
+        stateSnapshot = snapshot;
+        //}
     }
 
     /////////////////////// UpdatePlayerTransform
@@ -258,14 +300,14 @@ public class PlayerController : NetworkBehaviour
     [Rpc(SendTo.NotServer)]
     public void UpdatePlayerTransformClientRpc(StateSnapshot snapshot)
     {
-        if (IsOwner)
-        {
-            ReconcileTransform(snapshot);
-        }
-        else
-        {
-            stateSnapshot = snapshot;
-        }
+        //if (IsOwner)
+        //{
+        //    ReconcileTransform(snapshot);
+        //}
+        //else
+        //{
+        stateSnapshot = snapshot;
+        //}
     }
 
 
