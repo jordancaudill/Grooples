@@ -47,7 +47,7 @@ public class GrappleGun : NetworkBehaviour
     [SerializeField] private float hangDistance = 2f;
     [SerializeField] private float minPopupDistance = 2f;
 
-    public bool pendingPopup;
+    public Vector2 pendingPopup;
     private Vector2 grappleOffset;
     private GameObject grappleObject = null;
     private float lastGrappleTime = -10f;
@@ -199,11 +199,9 @@ public class GrappleGun : NetworkBehaviour
         {
             // If the player is grounded and the distance is less than the minimum, pop up the player, do not grapple
             lastGrappleLocation = _hit.point;
-            pendingPopup = true;
-            if (!IsServer)
-            {
-                PopupPlayerServerRpc(lastGrappleLocation);
-            }
+            Vector2 distanceVector = (Vector2)transform.position - _hit.point;
+            pendingPopup = distanceVector;
+            PopupPlayerServerRpc(pendingPopup);
 
         }
         else if (_hit.transform.gameObject.layer == terrainLayer || _hit.transform.gameObject.layer == playersLayer)
@@ -229,7 +227,8 @@ public class GrappleGun : NetworkBehaviour
     public void PopupPlayerServerRpc(Vector2 point)
     {
         lastGrappleLocation = point;
-        pendingPopup = true;
+        Vector2 distanceVector = (Vector2)transform.position - point;
+        pendingPopup = distanceVector;
     }
 
     [Rpc(SendTo.NotServer)]

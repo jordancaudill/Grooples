@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UIElements;
-using UnityEngine.Windows;
 
 
 public class PlayerController : NetworkBehaviour
@@ -122,7 +120,7 @@ public class PlayerController : NetworkBehaviour
         if (rb == null) return;
 
 
-        if (grappleGun.pendingPopup)
+        if (grappleGun.pendingPopup != Vector2.zero)
         {
             PopupPlayer(grappleGun.lastGrappleLocation);
         }
@@ -233,7 +231,7 @@ public class PlayerController : NetworkBehaviour
         float error = Vector2.Distance(rb.position, serverSnapshot.position);
         float rotError = Mathf.Abs(Mathf.DeltaAngle(rb.rotation, serverSnapshot.rotation));
         // Snap if error is very large, otherwise smooth
-        if (error > 9f)
+        if (error > 5f)
         {
             print("snapping");
             rb.position = serverSnapshot.position;
@@ -241,7 +239,7 @@ public class PlayerController : NetworkBehaviour
             rb.linearVelocity = serverSnapshot.velocity;
             rb.angularVelocity = serverSnapshot.angularVelocity;
         }
-        else if (error > 0.5f)
+        else if (error > 0.5f || rotError > 30f)
         {
             rb.position = Vector2.Lerp(rb.position, serverSnapshot.position, 0.5f);
             rb.rotation = Mathf.LerpAngle(rb.rotation, serverSnapshot.rotation, 0.5f);
@@ -266,11 +264,10 @@ public class PlayerController : NetworkBehaviour
         };
     }
 
-    public void PopupPlayer(Vector2 point)
+    public void PopupPlayer(Vector2 distanceVector)
     {
-        Vector2 distanceVector = (Vector2)grappleGun.transform.position - point;
         rb.AddForce(distanceVector.normalized * popupForce, ForceMode2D.Force);
-        grappleGun.pendingPopup = false;
+        grappleGun.pendingPopup = Vector2.zero;
 
     }
 
