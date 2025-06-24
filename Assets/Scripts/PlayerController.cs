@@ -132,6 +132,14 @@ public class PlayerController : NetworkBehaviour
         //Be sure to always apply and set velocties using PredictionRigidbody
         //and never on the rigidbody itself; this includes if also accessing from
         //another script.
+        if (CheckOutOfBounds())
+        {
+            rb.position = spawnPoint.position;
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+
+        }
+
 
         if (data.Move != Vector2.zero)
         {
@@ -211,13 +219,6 @@ public class PlayerController : NetworkBehaviour
 
     void FixedUpdate()
     {
-        if (CheckOutOfBounds())
-        {
-            rb.position = spawnPoint.position;
-            rb.linearVelocity = Vector2.zero;
-            rb.angularVelocity = 0f;
-
-        }
 
         if (!IsOwner) return;
 
@@ -259,50 +260,6 @@ public class PlayerController : NetworkBehaviour
     //    grappleGun.pendingPopup = false;
 
     //}
-
-
-    ///////////////////////// MovePlayer
-    //public void MovePlayer(Vector2 input)
-    //{
-    //    rb.AddForce(new Vector2(input.x * moveSpeed, 0), ForceMode2D.Force);
-    //}
-
-
-    //[Rpc(SendTo.Server)]
-    //public void MovePlayerServerRpc(Vector2 input)
-    //{
-    //    pendingInput = input;
-    //}
-
-    //[Rpc(SendTo.NotServer)]
-    //public void MovePlayerClientRpc(StateSnapshot snapshot)
-    //{
-    //    stateSnapshot = snapshot;
-    //}
-
-    ///////////////////////// UpdatePlayerTransform
-    //public void UpdatePlayerTransform(StateSnapshot snapshot)
-    //{
-    //    rb.position = snapshot.position;
-    //    rb.rotation = snapshot.rotation;
-    //    rb.linearVelocity = snapshot.velocity;
-    //    rb.angularVelocity = snapshot.angularVelocity;
-    //}
-
-
-    //[Rpc(SendTo.Server)]
-    //public void UpdatePlayerTransformServerRpc(StateSnapshot snapshot)
-    //{
-    //    UpdatePlayerTransform(snapshot);
-    //    UpdatePlayerTransformClientRpc(snapshot);
-    //}
-
-    //[Rpc(SendTo.NotServer)]
-    //public void UpdatePlayerTransformClientRpc(StateSnapshot snapshot)
-    //{
-    //    stateSnapshot = snapshot;
-    //}
-
 
 
     ///////////////////////// Utils

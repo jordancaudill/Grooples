@@ -448,14 +448,14 @@ MonoBehaviour:
     AttachOnStop: 0
   _controllerMovementSettings:
     EnableTeleport: 1
-    TeleportThreshold: 1
+    TeleportThreshold: 3
     AdaptiveInterpolationValue: 0
     InterpolationValue: 1
     SmoothedProperties: 4294967295
     SnapNonSmoothedProperties: 0
   _spectatorMovementSettings:
     EnableTeleport: 1
-    TeleportThreshold: 1
+    TeleportThreshold: 3
     AdaptiveInterpolationValue: 0
     InterpolationValue: 1
     SmoothedProperties: 4294967295
