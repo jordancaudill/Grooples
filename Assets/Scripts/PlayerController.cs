@@ -1,10 +1,13 @@
+using FishNet.Managing.Client;
+using FishNet.Managing.Timing;
+using FishNet.Object;
+using FishNet.Object.Prediction;
+using FishNet.Object.Synchronizing;
+using FishNet.Transporting;
+using GameKit.Dependencies.Utilities;
 using System.Collections.Generic;
-using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UIElements;
-using UnityEngine.Windows;
-
 
 public class PlayerController : NetworkBehaviour
 {
@@ -28,72 +31,202 @@ public class PlayerController : NetworkBehaviour
     public bool isGrounded;
     private Vector2 moveInput;
 
-    private NetworkObject networkObject;
+    [SerializeField] public Collider2D[] playerColliders;
+
     public PlayerInput playerInput;
     public PlayerInputManager playerInputManager;
-    public int playerNumber;
     [SerializeField] private float popupForce = 500f;
-    [SerializeField] private float reconciliationVelocityThreshold = 3f;
+
+    public readonly SyncVar<int> playerNumber = new SyncVar<int>();
 
 
-    // Pending movement inputs
-    private Vector2 pendingInput;
+    private void OnPlayerNumberChanged(int previous, int next, bool asServer)
+    {
+        AssignSpriteToPlayer();
+    }
 
     GameManager gameManager;
 
-    //private Queue<StateSnapshot> stateBuffer = new Queue<StateSnapshot>();
+    public PredictionRigidbody2D PredictionRigidbody;
 
-    public struct StateSnapshot : INetworkSerializable
+    public struct ReplicateData : IReplicateData
     {
-        public Vector2 position;
-        public float rotation;
-        public Vector2 velocity;
-        public float angularVelocity;
-        public float timestamp;
-
-        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        public Vector2 Move;
+        public ReplicateData(Vector2 move) : this()
         {
-            serializer.SerializeValue(ref position);
-            serializer.SerializeValue(ref rotation);
-            serializer.SerializeValue(ref velocity);
-            serializer.SerializeValue(ref angularVelocity);
-            serializer.SerializeValue(ref timestamp);
+            Move = move;
         }
+
+        private uint _tick;
+        public void Dispose() { }
+        public uint GetTick() => _tick;
+        public void SetTick(uint value) => _tick = value;
     }
 
-    public StateSnapshot stateSnapshot = new StateSnapshot
+    public struct ReconcileData : IReconcileData
     {
-        position = Vector2.zero,
-        rotation = 0f,
-        velocity = Vector2.zero,
-        angularVelocity = 0f,
-        timestamp = 0f
-    };
+        //PredictionRigidbody is used to synchronize rigidbody states
+        //and forces. This could be done manually but the PredictionRigidbody
+        //type makes this process considerably easier. Velocities, kinematic state,
+        //transform properties, pending velocities and more are automatically
+        //handled with PredictionRigidbody.
+        public PredictionRigidbody2D PredictionRigidbody;
 
-    public override void OnNetworkSpawn()
-    {
-        base.OnNetworkSpawn();
-        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
-        playerNumber = gameManager.players.Count;
-        name = "Player_" + playerNumber;
-        gameManager.AddPlayer(name);
-        AssignSpriteToPlayer();
+        public ReconcileData(PredictionRigidbody2D pr) : this()
+        {
+            PredictionRigidbody = pr;
+        }
 
+        private uint _tick;
+        public void Dispose() { }
+        public uint GetTick() => _tick;
+        public void SetTick(uint value) => _tick = value;
     }
 
-    void Start()
+    private void Awake()
     {
+        PredictionRigidbody = ObjectCaches<PredictionRigidbody2D>.Retrieve();
+        PredictionRigidbody.Initialize(GetComponent<Rigidbody2D>());
+        playerNumber.OnChange += OnPlayerNumberChanged;
+
+    }
+    private void OnDestroy()
+    {
+        ObjectCaches<PredictionRigidbody2D>.StoreAndDefault(ref PredictionRigidbody);
+    }
+    public override void OnStartNetwork()
+    {
+        TimeManager.OnTick += TimeManager_OnTick;
+        TimeManager.OnPostTick += TimeManager_OnPostTick;
+    }
+
+    public override void OnStopNetwork()
+    {
+        TimeManager.OnTick -= TimeManager_OnTick;
+        TimeManager.OnPostTick -= TimeManager_OnPostTick;
+    }
+
+    private void TimeManager_OnTick()
+    {
+        RunInputs(CreateReplicateData());
+    }
+
+    private ReplicateData CreateReplicateData()
+    {
+        if (!IsOwner)
+            return default;
+
+        //Build the replicate data with all inputs which affect the prediction.
+        ReplicateData md = new ReplicateData(moveInput);
+        return md;
+    }
+
+    [Replicate]
+    private void RunInputs(ReplicateData data, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable)
+    {
+        /* ReplicateState is set based on if the data is new, being replayed, ect.
+        * Visit the ReplicationState enum for more information on what each value
+        * indicates. At the end of this guide a more advanced use of state will
+        * be demonstrated. */
+
+        //Be sure to always apply and set velocties using PredictionRigidbody
+        //and never on the rigidbody itself; this includes if also accessing from
+        //another script.
+
+        if (data.Move != Vector2.zero)
+        {
+            PredictionRigidbody.AddForce(new Vector2(data.Move.x * moveSpeed, 0), ForceMode2D.Force);
+        }
+        //Add gravity to make the object fall faster. This is of course
+        //entirely optional.
+        //PredictionRigidbody.AddForce(Physics.gravity * 3f);
+
+        //Simulate the added forces.
+        //Typically you call this at the end of your replicate. Calling
+        //Simulate is ultimately telling the PredictionRigidbody to iterate
+        //the forces we added above.
+        PredictionRigidbody.Simulate();
+    }
+
+    private void TimeManager_OnPostTick()
+    {
+        CreateReconcile();
+    }
+
+    //Create the reconcile data here and call your reconcile method.
+    public override void CreateReconcile()
+    {
+        //We must send back the state of the rigidbody. Using your
+        //PredictionRigidbody field in the reconcile data is an easy
+        //way to accomplish this. More advanced states may require other
+        //values to be sent; this will be covered later on.
+        ReconcileData rd = new ReconcileData(PredictionRigidbody);
+        //Like with the replicate you could specify a channel here, though
+        //it's unlikely you ever would with a reconcile.
+        ReconcileState(rd);
+    }
+
+    [Reconcile]
+    private void ReconcileState(ReconcileData data, Channel channel = Channel.Unreliable)
+    {
+        //Call reconcile on your PredictionRigidbody field passing in
+        //values from data.
+        PredictionRigidbody.Reconcile(data.PredictionRigidbody);
+    }
+
+
+    public override void OnStartClient()
+    {
+
+        if (IsOwner)
+        {
+            GetComponent<PlayerInput>().enabled = true;
+            AddPlayer();
+        }
+       
         playerInputManager = GameObject.Find("PlayerInputManager").GetComponent<PlayerInputManager>();
         spawnPoint = GameObject.Find("Spawn").transform;
-        rb.position = spawnPoint.position;
 
-        if (!IsHost && !IsServer && !IsClient)
+    }
+
+    private void Start()
+    {
+        if (IsServerStarted)
         {
-            // New local player probably joined so we need to spawn the NetworkObject
-            networkObject = GetComponent<NetworkObject>();
-            networkObject.Spawn();
+            gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+
         }
     }
+
+
+    [ServerRpc]
+    private void AddPlayer()
+    {
+        playerNumber.Value = gameManager.playerCount.Value;
+        gameManager.playerCount.Value++;
+        name = "Player_" + playerNumber.Value;
+
+    }
+
+
+    void FixedUpdate()
+    {
+        if (CheckOutOfBounds())
+        {
+            rb.position = spawnPoint.position;
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+
+        }
+
+        if (!IsOwner) return;
+
+        // Check if grounded
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, terrainLayer);
+
+    }
+
+
 
 
     public void OnLook(InputAction.CallbackContext context)
@@ -117,209 +250,73 @@ public class PlayerController : NetworkBehaviour
 
     }
 
-    void FixedUpdate()
+
+
+    //public void PopupPlayer(Vector2 point)
+    //{
+    //    Vector2 distanceVector = (Vector2)grappleGun.transform.position - point;
+    //    rb.AddForce(distanceVector.normalized * popupForce, ForceMode2D.Force);
+    //    grappleGun.pendingPopup = false;
+
+    //}
+
+
+    ///////////////////////// MovePlayer
+    //public void MovePlayer(Vector2 input)
+    //{
+    //    rb.AddForce(new Vector2(input.x * moveSpeed, 0), ForceMode2D.Force);
+    //}
+
+
+    //[Rpc(SendTo.Server)]
+    //public void MovePlayerServerRpc(Vector2 input)
+    //{
+    //    pendingInput = input;
+    //}
+
+    //[Rpc(SendTo.NotServer)]
+    //public void MovePlayerClientRpc(StateSnapshot snapshot)
+    //{
+    //    stateSnapshot = snapshot;
+    //}
+
+    ///////////////////////// UpdatePlayerTransform
+    //public void UpdatePlayerTransform(StateSnapshot snapshot)
+    //{
+    //    rb.position = snapshot.position;
+    //    rb.rotation = snapshot.rotation;
+    //    rb.linearVelocity = snapshot.velocity;
+    //    rb.angularVelocity = snapshot.angularVelocity;
+    //}
+
+
+    //[Rpc(SendTo.Server)]
+    //public void UpdatePlayerTransformServerRpc(StateSnapshot snapshot)
+    //{
+    //    UpdatePlayerTransform(snapshot);
+    //    UpdatePlayerTransformClientRpc(snapshot);
+    //}
+
+    //[Rpc(SendTo.NotServer)]
+    //public void UpdatePlayerTransformClientRpc(StateSnapshot snapshot)
+    //{
+    //    stateSnapshot = snapshot;
+    //}
+
+
+
+    ///////////////////////// Utils
+
+    private void ToggleColliders(bool enable)
     {
-        if (rb == null) return;
-
-
-        if (grappleGun.pendingPopup)
+        foreach (Collider2D collider in playerColliders)
         {
-            PopupPlayer(grappleGun.lastGrappleLocation);
-        }
-
-        if (IsOwner)
-        {
-            // Check if grounded
-            isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, terrainLayer);
-
-            if (CheckOutOfBounds())
+            if (collider != null)
             {
-                UpdatePlayerTransformServerRpc(new StateSnapshot
-                {
-                    position = spawnPoint.position,
-                    rotation = 0f,
-                    velocity = Vector2.zero,
-                    angularVelocity = 0f,
-                    timestamp = Time.time
-                });
-            }
-
-
-            if (IsServer)
-            {
-                // Owner and server
-                // Move and update all clients
-                MovePlayer(moveInput);
-                MovePlayerClientRpc(new StateSnapshot
-                {
-                    position = rb.position,
-                    rotation = rb.rotation,
-                    velocity = rb.linearVelocity,
-                    angularVelocity = rb.angularVelocity,
-                    timestamp = Time.time
-                });
-
-            }
-            else
-            {
-                // Owner but not server
-                // Move locally for responsiveness, then send input to server for validation
-                if (stateSnapshot.timestamp != 0f)
-                {
-                    ReconcileTransform(stateSnapshot);
-                }
-                MovePlayer(moveInput);
-                MovePlayerServerRpc(moveInput);
-
-            }
-
-        }
-        else
-        {
-            if (IsServer)
-            {
-                // Server but not owner
-                if (pendingInput != Vector2.zero)
-                {
-                    MovePlayer(pendingInput);
-                    pendingInput = Vector2.zero;
-                }
-                MovePlayerClientRpc(new StateSnapshot
-                {
-                    position = rb.position,
-                    rotation = rb.rotation,
-                    velocity = rb.linearVelocity,
-                    angularVelocity = rb.angularVelocity,
-                    timestamp = Time.time
-                });
-
-            }
-            else
-            {
-                // Not owner and not server
-                InterpolateTransform();
+                collider.enabled = enable;
             }
         }
-
-
-
     }
-
-    // Interpolate transform for non-owner (remote) clients
-    private void InterpolateTransform()
-    {
-        if (!IsOwner && !IsServer)
-        {
-
-            //If we've teleported the player, snap to the position and rotation
-            if (stateSnapshot.velocity == Vector2.zero && stateSnapshot.angularVelocity == 0f)
-            {
-                rb.position = stateSnapshot.position;
-                rb.rotation = stateSnapshot.rotation;
-                rb.linearVelocity = stateSnapshot.velocity;
-                rb.angularVelocity = stateSnapshot.angularVelocity;
-                return;
-            }
-
-            rb.position = Vector2.Lerp(rb.position, stateSnapshot.position, 0.5f);
-            rb.rotation = Mathf.LerpAngle(rb.rotation, stateSnapshot.rotation, 0.5f);
-            // maybe should try MovePosition and MoveRotation again ?
-        }
-
-    }
-
-    public void ReconcileTransform(StateSnapshot serverSnapshot)
-    {
-        float error = Vector2.Distance(rb.position, serverSnapshot.position);
-        float rotError = Mathf.Abs(Mathf.DeltaAngle(rb.rotation, serverSnapshot.rotation));
-        // Snap if error is very large, otherwise smooth
-        if (error > 9f)
-        {
-            print("snapping");
-            rb.position = serverSnapshot.position;
-            rb.rotation = serverSnapshot.rotation;
-            rb.linearVelocity = serverSnapshot.velocity;
-            rb.angularVelocity = serverSnapshot.angularVelocity;
-        }
-        else if (error > 0.5f)
-        {
-            rb.position = Vector2.Lerp(rb.position, serverSnapshot.position, 0.5f);
-            rb.rotation = Mathf.LerpAngle(rb.rotation, serverSnapshot.rotation, 0.5f);
-            rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, serverSnapshot.velocity, 0.5f);
-            rb.angularVelocity = Mathf.Lerp(rb.angularVelocity, serverSnapshot.angularVelocity, 0.1f);
-        }
-
-
-
-        ClearSnapshot();
-    }
-
-    private void ClearSnapshot()
-    {
-        stateSnapshot = new StateSnapshot
-        {
-            position = Vector2.zero,
-            rotation = 0f,
-            velocity = Vector2.zero,
-            angularVelocity = 0f,
-            timestamp = 0f
-        };
-    }
-
-    public void PopupPlayer(Vector2 point)
-    {
-        Vector2 distanceVector = (Vector2)grappleGun.transform.position - point;
-        rb.AddForce(distanceVector.normalized * popupForce, ForceMode2D.Force);
-        grappleGun.pendingPopup = false;
-
-    }
-
-
-    /////////////////////// MovePlayer
-    public void MovePlayer(Vector2 input)
-    {
-        rb.AddForce(new Vector2(input.x * moveSpeed, 0), ForceMode2D.Force);
-    }
-
-
-    [Rpc(SendTo.Server)]
-    public void MovePlayerServerRpc(Vector2 input)
-    {
-        pendingInput = input;
-    }
-
-    [Rpc(SendTo.NotServer)]
-    public void MovePlayerClientRpc(StateSnapshot snapshot)
-    {
-        stateSnapshot = snapshot;
-    }
-
-    /////////////////////// UpdatePlayerTransform
-    public void UpdatePlayerTransform(StateSnapshot snapshot)
-    {
-        rb.position = snapshot.position;
-        rb.rotation = snapshot.rotation;
-        rb.linearVelocity = snapshot.velocity;
-        rb.angularVelocity = snapshot.angularVelocity;
-    }
-
-
-    [Rpc(SendTo.Server)]
-    public void UpdatePlayerTransformServerRpc(StateSnapshot snapshot)
-    {
-        UpdatePlayerTransform(snapshot);
-        UpdatePlayerTransformClientRpc(snapshot);
-    }
-
-    [Rpc(SendTo.NotServer)]
-    public void UpdatePlayerTransformClientRpc(StateSnapshot snapshot)
-    {
-        stateSnapshot = snapshot;
-    }
-
-
-
-    /////////////////////// Utils
 
     bool CheckOutOfBounds()
     {
@@ -335,8 +332,9 @@ public class PlayerController : NetworkBehaviour
             { 2, "Sprites/player_yellow" },
             { 3, "Sprites/player_purple" },
         };
-        string playerSprite = playerSprites[playerNumber];
+        string playerSprite = playerSprites[playerNumber.Value];
+        GameObject graphicObject = transform.Find("GraphicalObject").gameObject;
         Sprite resource = Resources.Load<Sprite>(playerSprite);
-        GetComponent<SpriteRenderer>().sprite = resource;
+        graphicObject.GetComponent<SpriteRenderer>().sprite = resource;
     }
 }

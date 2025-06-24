@@ -1,4 +1,3 @@
-using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -48,8 +47,8 @@ public class UIController : MonoBehaviour
     {
         levelPanel.SetActive(true);
         mainMenuButtons.SetActive(false);
-        EventSystem.current.SetSelectedGameObject(null);
-        EventSystem.current.SetSelectedGameObject(level1Button.gameObject);
+        //EventSystem.current.SetSelectedGameObject(null);
+        //EventSystem.current.SetSelectedGameObject(level1Button.gameObject);
 
     }
 
@@ -57,8 +56,8 @@ public class UIController : MonoBehaviour
     {
         levelPanel.SetActive(false);
         mainMenuButtons.SetActive(true);
-        EventSystem.current.SetSelectedGameObject(null);
-        EventSystem.current.SetSelectedGameObject(playButton.gameObject);
+        //EventSystem.current.SetSelectedGameObject(null);
+        //EventSystem.current.SetSelectedGameObject(playButton.gameObject);
 
 
     }
@@ -86,13 +85,13 @@ public class UIController : MonoBehaviour
 
     public void HostGame()
     {
-        NetworkManager.Singleton.StartHost();
+        //NetworkManager.Singleton.StartHost();
         ResumeGame();
     }
 
     public void JoinGame()
     {
-        NetworkManager.Singleton.StartClient();
+        //NetworkManager.Singleton.StartClient();
         ResumeGame();
 
     }

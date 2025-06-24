@@ -1,10 +1,12 @@
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using System.Collections.Generic;
-using Unity.Netcode;
+using UnityEngine;
 
 public class GameManager : NetworkBehaviour
 {
 
-    public List<string> players = new List<string>();
+    public readonly SyncVar<int> playerCount = new SyncVar<int>();
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -18,13 +20,5 @@ public class GameManager : NetworkBehaviour
         
     }
 
-    public void AddPlayer(string name) {
-        players.Add(name);
-    }
-
-    public void RemovePlayer(string name)
-    {
-        players.Remove(name);
-    }
 
 }
