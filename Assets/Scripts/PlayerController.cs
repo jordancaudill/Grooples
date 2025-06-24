@@ -11,33 +11,13 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : NetworkBehaviour
 {
-    [Header("Movement Settings")]
-    public float moveSpeed = 5f;
-
-    [Header("Grapple")]
-    public GrappleGun grappleGun;
-
-    [Header("Ground Check")]
-    public Transform groundCheck;
-    public float groundCheckRadius = 0.2f;
-    public LayerMask terrainLayer;
-
-    [Header("Bounds Check")]
-    public LayerMask boundsLayer;
-    private Transform spawnPoint;
-
-    public Rigidbody2D rb;
-
-    public bool isGrounded;
-    private Vector2 moveInput;
-
-    [SerializeField] public Collider2D[] playerColliders;
-
-    public PlayerInput playerInput;
-    public PlayerInputManager playerInputManager;
-    [SerializeField] private float popupForce = 500f;
 
     public readonly SyncVar<int> playerNumber = new SyncVar<int>();
+
+    private PlayerMovement playerMovement;
+    public Rigidbody2D rb;
+    public GameObject tongue;
+    GameManager gameManager;
 
 
     private void OnPlayerNumberChanged(int previous, int next, bool asServer)
@@ -45,16 +25,26 @@ public class PlayerController : NetworkBehaviour
         AssignSpriteToPlayer();
     }
 
-    GameManager gameManager;
 
     public PredictionRigidbody2D PredictionRigidbody;
 
     public struct ReplicateData : IReplicateData
     {
+        // The player's current movement input
         public Vector2 Move;
-        public ReplicateData(Vector2 move) : this()
+        // The position to teleport the player to (if any)
+        public Vector2 Teleport;
+        // The normalized aim direction (if any)
+        public Vector2 Aim;
+        // The point the player is popping from
+        public Vector2 Popup;
+
+        public ReplicateData(Vector2 move, Vector2 teleport, Vector2 aim, Vector2 popup) : this()
         {
             Move = move;
+            Teleport = teleport;
+            Aim = aim;
+            Popup = popup;
         }
 
         private uint _tick;
@@ -117,7 +107,7 @@ public class PlayerController : NetworkBehaviour
             return default;
 
         //Build the replicate data with all inputs which affect the prediction.
-        ReplicateData md = new ReplicateData(moveInput);
+        ReplicateData md = new ReplicateData(playerMovement.moveInput, playerMovement.teleport, playerMovement.aimDirection, playerMovement.popup);
         return md;
     }
 
@@ -132,18 +122,27 @@ public class PlayerController : NetworkBehaviour
         //Be sure to always apply and set velocties using PredictionRigidbody
         //and never on the rigidbody itself; this includes if also accessing from
         //another script.
-        if (CheckOutOfBounds())
+
+
+        if (data.Teleport != Vector2.zero)
         {
-            rb.position = spawnPoint.position;
+            rb.position = data.Teleport;
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
-
+            playerMovement.teleport = Vector2.zero;
         }
-
 
         if (data.Move != Vector2.zero)
         {
-            PredictionRigidbody.AddForce(new Vector2(data.Move.x * moveSpeed, 0), ForceMode2D.Force);
+            PredictionRigidbody.AddForce(new Vector2(data.Move.x * playerMovement.moveSpeed, 0), ForceMode2D.Force);
+        }
+
+        if (data.Popup != Vector2.zero)
+        {
+            Vector2 distanceVector = (Vector2)tongue.transform.position - data.Popup;
+            PredictionRigidbody.AddForce(distanceVector.normalized * playerMovement.popupForce, ForceMode2D.Force);
+
+            playerMovement.popup = Vector2.zero;
         }
         //Add gravity to make the object fall faster. This is of course
         //entirely optional.
@@ -191,9 +190,7 @@ public class PlayerController : NetworkBehaviour
             GetComponent<PlayerInput>().enabled = true;
             AddPlayer();
         }
-       
-        playerInputManager = GameObject.Find("PlayerInputManager").GetComponent<PlayerInputManager>();
-        spawnPoint = GameObject.Find("Spawn").transform;
+        playerMovement = GetComponent<PlayerMovement>();
 
     }
 
@@ -206,7 +203,6 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-
     [ServerRpc]
     private void AddPlayer()
     {
@@ -214,70 +210,6 @@ public class PlayerController : NetworkBehaviour
         gameManager.playerCount.Value++;
         name = "Player_" + playerNumber.Value;
 
-    }
-
-
-    void FixedUpdate()
-    {
-
-        if (!IsOwner) return;
-
-        // Check if grounded
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, terrainLayer);
-
-    }
-
-
-
-
-    public void OnLook(InputAction.CallbackContext context)
-    {
-        if (!IsOwner) return;
-        if (playerInput.currentControlScheme == "Gamepad")
-        {
-            moveInput = context.ReadValue<Vector2>();
-        }
-
-    }
-
-    public void OnMove(InputAction.CallbackContext context)
-    {
-        if (!IsOwner) return;
-        if (playerInput.currentControlScheme != "Gamepad")
-        {
-            moveInput = context.ReadValue<Vector2>();
-        }
-
-
-    }
-
-
-
-    //public void PopupPlayer(Vector2 point)
-    //{
-    //    Vector2 distanceVector = (Vector2)grappleGun.transform.position - point;
-    //    rb.AddForce(distanceVector.normalized * popupForce, ForceMode2D.Force);
-    //    grappleGun.pendingPopup = false;
-
-    //}
-
-
-    ///////////////////////// Utils
-
-    private void ToggleColliders(bool enable)
-    {
-        foreach (Collider2D collider in playerColliders)
-        {
-            if (collider != null)
-            {
-                collider.enabled = enable;
-            }
-        }
-    }
-
-    bool CheckOutOfBounds()
-    {
-        return Physics2D.OverlapCircle(rb.position, 1f, boundsLayer);
     }
 
     private void AssignSpriteToPlayer()
