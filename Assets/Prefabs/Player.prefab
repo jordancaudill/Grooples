@@ -41,6 +41,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3474841915143312180}
   - component: {fileID: 4815119977137823805}
+  - component: {fileID: 3451043250967181955}
   m_Layer: 7
   m_Name: Tongue
   m_TagString: Untagged
@@ -179,6 +180,112 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
+--- !u!114 &3451043250967181955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2780419219925719995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 920705b718afe9a49909a372940a7820, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 9166242095118903001}
+  _networkObjectCache: {fileID: 0}
+  lineRenderer: {fileID: 4815119977137823805}
+  tongueAnimationCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.0037496686
+      value: 0.0027580801
+      inSlope: 1.25045
+      outSlope: 1.25045
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.19900022
+      value: 0.24690914
+      inSlope: -0.012082549
+      outSlope: -0.012082549
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 1
+    - serializedVersion: 3
+      time: 0.4047585
+      value: -0.48884436
+      inSlope: -0.0003118675
+      outSlope: -0.0003118675
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.1756352
+    - serializedVersion: 3
+      time: 0.60876125
+      value: 0.496076
+      inSlope: 0.031276036
+      outSlope: 0.031276036
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.25660148
+    - serializedVersion: 3
+      time: 0.80592483
+      value: -0.2442354
+      inSlope: 0.008489183
+      outSlope: 0.008489183
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.526149
+    - serializedVersion: 3
+      time: 1
+      value: -0.00491333
+      inSlope: 1.2331411
+      outSlope: 1.2331411
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  tongueProgressionCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  startTongueWaveSize: 2
+  straightenLineSpeed: 5
+  tongueProgressionSpeed: 1
+  tonguePrecisionPoints: 40
+  defaultTongueLength: 1
+  playerMovement: {fileID: -4369470990084180759}
 --- !u!1 &4124784036769132743
 GameObject:
   m_ObjectHideFlags: 0
@@ -459,12 +566,12 @@ GameObject:
   - component: {fileID: 1456231702647241194}
   - component: {fileID: 3178409488135413617}
   - component: {fileID: 1848247816056139402}
-  - component: {fileID: 701968169404931231}
   - component: {fileID: 5989748641023836935}
   - component: {fileID: 1531998262079415352}
   - component: {fileID: 9166242095118903001}
   - component: {fileID: -7808635514866686121}
   - component: {fileID: -4369470990084180759}
+  - component: {fileID: 701968169404931231}
   m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
@@ -585,42 +692,6 @@ SpringJoint2D:
   m_Distance: 1
   m_DampingRatio: 1
   m_Frequency: 1
---- !u!58 &701968169404931231
-CircleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5401303326408513776}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0.0063729286, y: -0.1227119}
-  m_Radius: 0.4236312
 --- !u!50 &5989748641023836935
 Rigidbody2D:
   serializedVersion: 5
@@ -899,6 +970,9 @@ MonoBehaviour:
   aimDirection: {x: 0, y: 0}
   teleport: {x: 0, y: 0}
   popup: {x: 0, y: 0}
+  grappleObject: {fileID: 0}
+  grappleOffset: {x: 0, y: 0}
+  lastGrappleObject: {fileID: 0}
   tongue: {fileID: 2780419219925719995}
   playerColliders:
   - {fileID: 701968169404931231}
@@ -911,3 +985,39 @@ MonoBehaviour:
   launchSpeed: 1
   hangDistance: 2
   minPopupDistance: 1.25
+--- !u!58 &701968169404931231
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5401303326408513776}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0.0063729286, y: -0.1227119}
+  m_Radius: 0.4236312

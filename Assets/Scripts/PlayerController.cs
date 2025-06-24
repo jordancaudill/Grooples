@@ -1,3 +1,4 @@
+using FishNet.Example.Scened;
 using FishNet.Managing.Client;
 using FishNet.Managing.Timing;
 using FishNet.Object;
@@ -225,5 +226,31 @@ public class PlayerController : NetworkBehaviour
         GameObject graphicObject = transform.Find("GraphicalObject").gameObject;
         Sprite resource = Resources.Load<Sprite>(playerSprite);
         graphicObject.GetComponent<SpriteRenderer>().sprite = resource;
+
+
+        // Assign a color to the player based on the OwnerClientId or any other logic
+        Dictionary<int, string> playerColors = new Dictionary<int, string>
+        {
+            { 0, "#EA61CC" },
+            { 1, "#689581" },
+            { 2, "#E9AC6F" },
+            { 3, "#9576A6" },
+        };
+
+        string playerColor = playerColors[playerNumber.Value];
+        ColorUtility.TryParseHtmlString(playerColor, out Color color);
+
+        tongue.GetComponent<LineRenderer>().colorGradient = new Gradient
+        {
+            colorKeys = new GradientColorKey[]
+            {
+                new GradientColorKey(color, 1f)
+            },
+            alphaKeys = new GradientAlphaKey[]
+            {
+                new GradientAlphaKey(1f, 1f)
+            }
+        };
+
     }
 }

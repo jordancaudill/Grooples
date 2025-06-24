@@ -32,6 +32,14 @@ public class PlayerMovement : NetworkBehaviour
     public Vector2 teleport;
     public Vector2 popup;
 
+    // the object being grappled to, if any
+    public GameObject grappleObject;
+    // Offset from the grapple object's position to the grapple point
+    public Vector2 grappleOffset;
+    // The last object grappled to.
+    public GameObject lastGrappleObject;
+
+
     public GameObject tongue;
 
     [SerializeField] public Collider2D[] playerColliders;
@@ -48,7 +56,6 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float minPopupDistance = 1.25f;
     private int terrainLayerNumber = 3;
     private int playersLayerNumber = 7;
-
 
 
     public override void OnStartClient()
@@ -84,7 +91,7 @@ public class PlayerMovement : NetworkBehaviour
         {
             // aim grapple on kbm
             Vector2 lookPosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            aimDirection = (lookPosition - (Vector2)transform.position).normalized;
+            aimDirection = (lookPosition - (Vector2)tongue.transform.position).normalized;
 
         }
     }
@@ -99,7 +106,11 @@ public class PlayerMovement : NetworkBehaviour
         else
         {
             // aim grapple on gamepad
-            aimDirection = (context.ReadValue<Vector2>().normalized);
+            if (context.ReadValue<Vector2>().normalized != Vector2.zero)
+            {
+                aimDirection = (context.ReadValue<Vector2>().normalized);
+
+            }
 
         }
 
