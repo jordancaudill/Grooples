@@ -281,10 +281,11 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   startTongueWaveSize: 2
-  straightenLineSpeed: 5
-  tongueProgressionSpeed: 1
+  straightenLineSpeed: 16.5
+  tongueProgressionSpeed: 49.6
   tonguePrecisionPoints: 40
   defaultTongueLength: 1
+  tongueTarget: {x: 0, y: 0}
   playerMovement: {fileID: -4369470990084180759}
 --- !u!1 &4124784036769132743
 GameObject:
@@ -974,7 +975,7 @@ MonoBehaviour:
   grappleObject: {fileID: 0}
   grappleOffset: {x: 0, y: 0}
   lastGrapplePoint: {x: 0, y: 0}
-  tongue: {fileID: 2780419219925719995}
+  tongue: {fileID: 3451043250967181955}
   playerColliders:
   - {fileID: 701968169404931231}
   playerInput: {fileID: 1531998262079415352}

@@ -30,7 +30,7 @@ public class PlayerMovement : NetworkBehaviour
     public Vector2 lastGrapplePoint;
 
 
-    public GameObject tongue;
+    public Tongue tongue;
 
     [SerializeField] public Collider2D[] playerColliders;
 
@@ -39,7 +39,7 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] public float popupForce = 1200f;
     private float lastGrappleTime = -10f;
     [SerializeField] private float grappleCooldown = 0.25f;
-    [SerializeField] private float maxDistance = 10f;
+    [SerializeField] public float maxDistance = 10f;
     [SerializeField] private float minDistance = 1f;
     [SerializeField] public float launchSpeed = 1f;
     [SerializeField] public float hangDistance = 2f;
@@ -60,6 +60,22 @@ public class PlayerMovement : NetworkBehaviour
 
     }
 
+    private void Update()
+    {
+        if (playerInput.currentControlScheme != "Gamepad")
+        {
+            // aim grapple on kbm
+            Vector2 lookPosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            aimDirection = (lookPosition - (Vector2)tongue.transform.position).normalized;
+
+        }
+
+        if (grappleObject == null)
+        {
+            tongue.SetTongueTargetDefault();
+        }
+
+    }
     private void FixedUpdate()
     {
         if (CheckOutOfBounds())
@@ -79,10 +95,11 @@ public class PlayerMovement : NetworkBehaviour
         }
         else
         {
-            // aim grapple on kbm
-            Vector2 lookPosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-            aimDirection = (lookPosition - (Vector2)tongue.transform.position).normalized;
-
+            // kbm handled in Update()
+        }
+        if (grappleObject == null)
+        {
+            tongue.SetTongueTargetDefault();
         }
     }
 
@@ -120,9 +137,8 @@ public class PlayerMovement : NetworkBehaviour
 
     private void TryGrapple()
     {
-        print("TryGrapple");
         if (Time.time - lastGrappleTime >= grappleCooldown)
-        {   
+        {
             lastGrappleTime = Time.time;
             ToggleColliders(false);
             RaycastHit2D _hit = Physics2D.Raycast(tongue.transform.position, aimDirection, maxDistance, hitLayers);
@@ -141,28 +157,25 @@ public class PlayerMovement : NetworkBehaviour
 
     private void StopGrapple()
     {
-        //if (grappleObject == null) return;
 
-        //UpdateGrapple(false, null, Vector2.zero);
-        //tongueTarget = GetNormalizedTongueDirection();
-        //grappleObject = null;
         lastGrappleTime = Time.time;
         grappleOffset = Vector2.zero;
         grappleObject = null;
-
+        tongue.SetTongueTargetDefault();
 
     }
 
     void OnGrappleHit(RaycastHit2D _hit)
     {
-        print("OnGrappleHit");
         int hitLayer = _hit.transform.gameObject.layer;
-
+        tongue.ResetTongueWaves();
         float distance = Vector2.Distance(_hit.point, tongue.transform.position);
-        if (_hit.transform.gameObject.layer == terrainLayerNumber  && distance <= minPopupDistance)
+        if (_hit.transform.gameObject.layer == terrainLayerNumber && distance <= minPopupDistance)
         {
             // If the distance is less than the minimum, popup the player
             popup = _hit.point;
+            lastGrapplePoint = popup;
+            tongue.SetTongueTargetHit();
 
         }
         else if (_hit.transform.gameObject.layer == terrainLayerNumber || _hit.transform.gameObject.layer == playersLayerNumber)
@@ -173,24 +186,17 @@ public class PlayerMovement : NetworkBehaviour
             grappleOffset = _hit.transform.InverseTransformPoint(_hit.point);
             grappleObject = _hit.transform.gameObject;
             lastGrapplePoint = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
-
-            //// Otherwise, use the hierarchy path
-            //UpdateGrapple(true, GetHierarchyPath(_hit.transform.gameObject), grappleOffset);
+            tongue.SetTongueTargetHit();
 
         }
     }
 
     void OnGrappleMiss()
     {
-        //tongueDrawTime = 0;
-        //tongueWaveSize = startTongueWaveSize;
-        //straightLine = false;
-        //tongueTarget = GetTargetPointAtDistance(maxDistance);
-        //lastGrappleLocation = tongueTarget;
+        lastGrapplePoint = (Vector2)tongue.transform.position + (aimDirection * maxDistance);
+        tongue.SetTongueTargetMiss();
+
     }
-
-
-
 
     bool CheckOutOfBounds()
     {

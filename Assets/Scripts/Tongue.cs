@@ -18,29 +18,51 @@ public class Tongue : NetworkBehaviour
     private float tongueDrawTime = 0;
     private float tongueWaveSize = 0;
     private bool straightLine = true;
+    public Vector2 tongueTarget;
 
     public PlayerMovement playerMovement;
 
     private void Start()
     {
         lineRenderer.positionCount = tonguePrecisionPoints;
-        tongueWaveSize = 0;
-        tongueDrawTime = 0;
     }
 
     private void Update()
     {
-        if (IsOwner)
-        {
-            DrawTongue();
-        }
+        tongueDrawTime += Time.deltaTime;
+
+        DrawTongue();
     }
 
+    public void ResetTongueWaves()
+    {
+        tongueDrawTime = 0;
+        tongueWaveSize = startTongueWaveSize;
+        straightLine = false;
+    }
+
+    public void SetTongueTargetDefault()
+    {
+        tongueTarget = (Vector2)transform.position + (playerMovement.aimDirection * defaultTongueLength);
+
+    }
+
+    public void SetTongueTargetHit()
+    {
+        tongueTarget = playerMovement.lastGrapplePoint;
+        //tongueTarget = (Vector2)playerMovement.grappleObject.transform.TransformPoint(playerMovement.grappleOffset);
+    }
+
+    public void SetTongueTargetMiss()
+    {
+        ResetTongueWaves();
+        //tongueTarget = (Vector2)transform.position + ((tongueTarget - (Vector2)transform.position).normalized) * playerMovement.maxDistance;
+        tongueTarget =  (Vector2)transform.position + (playerMovement.aimDirection * playerMovement.maxDistance);
+        print(tongueTarget);
+    }
 
     void DrawTongue()
     {
-        Vector2 tongueTarget = playerMovement.grappleObject != null ? playerMovement.lastGrapplePoint : (Vector2)transform.position - (playerMovement.aimDirection * defaultTongueLength * -1);
-
         if (!straightLine)
         {
             if (Math.Abs(lineRenderer.GetPosition(tonguePrecisionPoints - 1).x - tongueTarget.x) <= 0.1f && Math.Abs(lineRenderer.GetPosition(tonguePrecisionPoints - 1).y - tongueTarget.y) <= 0.1f)
@@ -78,11 +100,13 @@ public class Tongue : NetworkBehaviour
             Vector2 targetPosition, currentPosition;
             if (playerMovement.grappleObject != null)
             {
+                // is grappling
                 targetPosition = Vector2.Lerp(transform.position, tongueTarget, delta) + offset;
                 currentPosition = Vector2.Lerp(transform.position, targetPosition, tongueProgressionCurve.Evaluate(tongueDrawTime) * tongueProgressionSpeed);
             }
             else
             {
+                // is not grappling
                 targetPosition = Vector2.Lerp(transform.position, playerMovement.lastGrapplePoint, delta) + offset;
                 currentPosition = Vector2.Lerp(targetPosition, tongueTarget, tongueProgressionCurve.Evaluate(tongueDrawTime) * tongueProgressionSpeed);
             }
@@ -93,6 +117,7 @@ public class Tongue : NetworkBehaviour
 
     void DrawTongueNoWaves(Vector2 tongueTarget)
     {
+        // animate the tongue extending to the target point
         lineRenderer.SetPosition(0, transform.position);
         for (int i = 1; i < tonguePrecisionPoints; i++)
         {

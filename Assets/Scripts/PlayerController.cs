@@ -73,8 +73,6 @@ public class PlayerController : NetworkBehaviour
         Dictionary<int, NetworkObject> spawned = IsServerInitialized ? NetworkManager.ServerManager.Objects.Spawned : NetworkManager.ClientManager.Objects.Spawned;
         if (spawned.TryGetValue(networkObjectId, out found))
         {
-            print("found object with id" + networkObjectId);
-
             return found.gameObject;
         }
         return null;
@@ -181,7 +179,6 @@ public class PlayerController : NetworkBehaviour
         {
             // Store localGrappleObject so we don't have to look it up every tick.
             localGrappleObject = GetObjectById(data.GrappleObjectId);
-            print("Grappling to " + localGrappleObject);
             if (localGrappleObject != null)
             {
                 springJoint2D.connectedBody = localGrappleObject.GetComponent<Rigidbody2D>();
