@@ -671,6 +671,7 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 9166242095118903001}
   rb: {fileID: 5989748641023836935}
   tongue: {fileID: 2780419219925719995}
+  springJoint2D: {fileID: 1848247816056139402}
 --- !u!231 &1848247816056139402
 SpringJoint2D:
   m_ObjectHideFlags: 0
@@ -689,7 +690,7 @@ SpringJoint2D:
   m_Anchor: {x: 0, y: 0}
   m_ConnectedAnchor: {x: 0, y: 0}
   m_AutoConfigureDistance: 0
-  m_Distance: 1
+  m_Distance: 2
   m_DampingRatio: 1
   m_Frequency: 1
 --- !u!50 &5989748641023836935
@@ -972,7 +973,7 @@ MonoBehaviour:
   popup: {x: 0, y: 0}
   grappleObject: {fileID: 0}
   grappleOffset: {x: 0, y: 0}
-  lastGrappleObject: {fileID: 0}
+  lastGrapplePoint: {x: 0, y: 0}
   tongue: {fileID: 2780419219925719995}
   playerColliders:
   - {fileID: 701968169404931231}

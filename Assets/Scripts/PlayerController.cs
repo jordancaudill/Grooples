@@ -1,11 +1,11 @@
-using FishNet.Example.Scened;
-using FishNet.Managing.Client;
+using FishNet.Managing.Object;
 using FishNet.Managing.Timing;
 using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using GameKit.Dependencies.Utilities;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -18,6 +18,8 @@ public class PlayerController : NetworkBehaviour
     private PlayerMovement playerMovement;
     public Rigidbody2D rb;
     public GameObject tongue;
+    public SpringJoint2D springJoint2D;
+    private GameObject localGrappleObject;
     GameManager gameManager;
 
 
@@ -39,19 +41,44 @@ public class PlayerController : NetworkBehaviour
         public Vector2 Aim;
         // The point the player is popping from
         public Vector2 Popup;
+        // the network id of the object being grappled to, if any
+        public int GrappleObjectId;
+        // Offset from the grapple object's position to the grapple point
+        public Vector2 GrappleOffset;
 
-        public ReplicateData(Vector2 move, Vector2 teleport, Vector2 aim, Vector2 popup) : this()
+
+        public ReplicateData(Vector2 move, Vector2 teleport, Vector2 aim, Vector2 popup, int grappleObjectId, Vector2 grappleOffset) : this()
         {
             Move = move;
             Teleport = teleport;
             Aim = aim;
             Popup = popup;
+            GrappleObjectId = grappleObjectId;
+            GrappleOffset = grappleOffset;
         }
 
         private uint _tick;
         public void Dispose() { }
         public uint GetTick() => _tick;
         public void SetTick(uint value) => _tick = value;
+
+
+    }
+
+
+
+    private GameObject GetObjectById(int networkObjectId)
+    {
+        NetworkObject found;
+        Dictionary<int, NetworkObject> spawned = IsServerInitialized ? NetworkManager.ServerManager.Objects.Spawned : NetworkManager.ClientManager.Objects.Spawned;
+        if (spawned.TryGetValue(networkObjectId, out found))
+        {
+            print("found object with id" + networkObjectId);
+
+            return found.gameObject;
+        }
+        return null;
+
     }
 
     public struct ReconcileData : IReconcileData
@@ -108,18 +135,23 @@ public class PlayerController : NetworkBehaviour
             return default;
 
         //Build the replicate data with all inputs which affect the prediction.
-        ReplicateData md = new ReplicateData(playerMovement.moveInput, playerMovement.teleport, playerMovement.aimDirection, playerMovement.popup);
+        int grappleObjectNetworkId = 0;
+        if (playerMovement.grappleObject != null)
+        {
+            NetworkObject networkObject = playerMovement.grappleObject.GetComponent<NetworkObject>();
+            if (networkObject != null)
+            {
+                grappleObjectNetworkId = networkObject.ObjectId;
+            }
+        }
+
+        ReplicateData md = new ReplicateData(playerMovement.moveInput, playerMovement.teleport, playerMovement.aimDirection, playerMovement.popup, grappleObjectNetworkId, playerMovement.grappleOffset);
         return md;
     }
 
     [Replicate]
     private void RunInputs(ReplicateData data, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable)
     {
-        /* ReplicateState is set based on if the data is new, being replayed, ect.
-        * Visit the ReplicationState enum for more information on what each value
-        * indicates. At the end of this guide a more advanced use of state will
-        * be demonstrated. */
-
         //Be sure to always apply and set velocties using PredictionRigidbody
         //and never on the rigidbody itself; this includes if also accessing from
         //another script.
@@ -145,14 +177,28 @@ public class PlayerController : NetworkBehaviour
 
             playerMovement.popup = Vector2.zero;
         }
-        //Add gravity to make the object fall faster. This is of course
-        //entirely optional.
-        //PredictionRigidbody.AddForce(Physics.gravity * 3f);
+        if (localGrappleObject == null && data.GrappleObjectId != 0)
+        {
+            // Store localGrappleObject so we don't have to look it up every tick.
+            localGrappleObject = GetObjectById(data.GrappleObjectId);
+            print("Grappling to " + localGrappleObject);
+            if (localGrappleObject != null)
+            {
+                springJoint2D.connectedBody = localGrappleObject.GetComponent<Rigidbody2D>();
+                springJoint2D.connectedAnchor = data.GrappleOffset;
+                springJoint2D.enabled = true;
+            }
+        }
+        else if (localGrappleObject != null && data.GrappleObjectId == 0)
+        {
+            localGrappleObject = null;
+            springJoint2D.enabled = false;
+            springJoint2D.connectedBody = null;
+            springJoint2D.connectedAnchor = Vector2.zero;
+        }
 
-        //Simulate the added forces.
-        //Typically you call this at the end of your replicate. Calling
-        //Simulate is ultimately telling the PredictionRigidbody to iterate
-        //the forces we added above.
+
+
         PredictionRigidbody.Simulate();
     }
 

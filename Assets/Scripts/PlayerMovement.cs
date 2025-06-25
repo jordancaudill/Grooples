@@ -1,14 +1,4 @@
-using FishNet.Example.ColliderRollbacks;
-using FishNet.Example.Scened;
-using FishNet.Managing.Client;
-using FishNet.Managing.Timing;
 using FishNet.Object;
-using FishNet.Object.Prediction;
-using FishNet.Object.Synchronizing;
-using FishNet.Transporting;
-using GameKit.Dependencies.Utilities;
-using System.Collections.Generic;
-using UnityEditor.Overlays;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -32,12 +22,12 @@ public class PlayerMovement : NetworkBehaviour
     public Vector2 teleport;
     public Vector2 popup;
 
-    // the object being grappled to, if any
+    // The object being grappled to, if any
     public GameObject grappleObject;
     // Offset from the grapple object's position to the grapple point
     public Vector2 grappleOffset;
     // The last object grappled to.
-    public GameObject lastGrappleObject;
+    public Vector2 lastGrapplePoint;
 
 
     public GameObject tongue;
@@ -51,8 +41,8 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float grappleCooldown = 0.25f;
     [SerializeField] private float maxDistance = 10f;
     [SerializeField] private float minDistance = 1f;
-    [SerializeField] private float launchSpeed = 1f;
-    [SerializeField] private float hangDistance = 2f;
+    [SerializeField] public float launchSpeed = 1f;
+    [SerializeField] public float hangDistance = 2f;
     [SerializeField] private float minPopupDistance = 1.25f;
     private int terrainLayerNumber = 3;
     private int playersLayerNumber = 7;
@@ -120,13 +110,12 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (context.performed)
         {
-            print("OnGrapple performed");
             TryGrapple();
         }
-        //else if (context.canceled)
-        //{
-        //    grappleGun.StopGrapple();
-        //}
+        else if (context.canceled)
+        {
+            StopGrapple();
+        }
     }
 
     private void TryGrapple()
@@ -157,7 +146,10 @@ public class PlayerMovement : NetworkBehaviour
         //UpdateGrapple(false, null, Vector2.zero);
         //tongueTarget = GetNormalizedTongueDirection();
         //grappleObject = null;
-        //lastGrappleTime = Time.time;
+        lastGrappleTime = Time.time;
+        grappleOffset = Vector2.zero;
+        grappleObject = null;
+
 
     }
 
@@ -178,10 +170,9 @@ public class PlayerMovement : NetworkBehaviour
 
             // Grapple to terrain or player
             // Get the local position of the hit point on the hit object, so if the object moves, the grapple point will still be correct
-            //grappleOffset = _hit.transform.InverseTransformPoint(_hit.point);
-            //grappleObject = _hit.transform.gameObject;
-            //tongueTarget = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
-            //lastGrappleLocation = tongueTarget;
+            grappleOffset = _hit.transform.InverseTransformPoint(_hit.point);
+            grappleObject = _hit.transform.gameObject;
+            lastGrapplePoint = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
 
             //// Otherwise, use the hierarchy path
             //UpdateGrapple(true, GetHierarchyPath(_hit.transform.gameObject), grappleOffset);
@@ -218,5 +209,52 @@ public class PlayerMovement : NetworkBehaviour
     }
 
 
+    public static string GetHierarchyPath(GameObject obj)
+    {
+        if (obj == null)
+            return null;
 
+        string path = obj.name;
+        Transform current = obj.transform.parent;
+
+        while (current != null)
+        {
+            path = current.name + "/" + path;
+            current = current.parent;
+        }
+        return path;
+
+    }
+
+    public static GameObject FindByHierarchyPath(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return null;
+
+        string[] names = path.Split('/');
+
+        // Start by finding the root object(s) (those without a parent)
+        GameObject[] rootObjects = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+
+        GameObject current = null;
+        foreach (var root in rootObjects)
+        {
+            if (root.name == names[0])
+            {
+                current = root;
+                break;
+            }
+        }
+        if (current == null) return null;
+
+        // Traverse down the hierarchy
+        for (int i = 1; i < names.Length; i++)
+        {
+            Transform child = current.transform.Find(names[i]);
+            if (child == null)
+                return null;
+
+            current = child.gameObject;
+        }
+        return current;
+    }
 }

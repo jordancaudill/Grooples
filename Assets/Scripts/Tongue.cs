@@ -1,9 +1,6 @@
 using FishNet.Object;
-using FishNet.Object.Prediction;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class Tongue : NetworkBehaviour
 {
@@ -23,14 +20,6 @@ public class Tongue : NetworkBehaviour
     private bool straightLine = true;
 
     public PlayerMovement playerMovement;
-    //private Vector2 tongueTarget;
-    //private Vector2 lastSentTongueTarget;
-    //public Vector2 lastGrappleLocation;
-    //private float tongueTargetSendInterval = 0.016667f; // 60 times per second
-    //private float tongueTargetSendTimer = 0f;
-    //private float tongueTargetMinChange = 0.01f; // Only send if look dir changes at least this much
-
-
 
     private void Start()
     {
@@ -41,25 +30,16 @@ public class Tongue : NetworkBehaviour
 
     private void Update()
     {
-        //// Set the tongue progression speed based on the current network latency
-        //if (NetworkManager.Singleton.NetworkConfig.NetworkTransport != null)
-        //{
-        //    float currentRtt = NetworkManager.Singleton.NetworkConfig.NetworkTransport.GetCurrentRtt(NetworkManager.Singleton.NetworkConfig.NetworkTransport.ServerClientId);
-        //    tongueProgressionSpeed = Mathf.Clamp(40f - (currentRtt / 10f), 20f, 40f); // Adjust the range as needed
-        //}
         if (IsOwner)
         {
             DrawTongue();
-
         }
-
     }
 
 
     void DrawTongue()
     {
-        // Todo set tongueTarget based on grapple state
-        Vector2 tongueTarget = playerMovement.grappleObject != null ? (Vector2)playerMovement.lastGrappleObject.transform.position - playerMovement.grappleOffset : (Vector2)transform.position - (playerMovement.aimDirection * defaultTongueLength * -1);
+        Vector2 tongueTarget = playerMovement.grappleObject != null ? playerMovement.lastGrapplePoint : (Vector2)transform.position - (playerMovement.aimDirection * defaultTongueLength * -1);
 
         if (!straightLine)
         {
@@ -103,7 +83,7 @@ public class Tongue : NetworkBehaviour
             }
             else
             {
-                targetPosition = Vector2.Lerp(transform.position, (Vector2)playerMovement.lastGrappleObject.transform.position - playerMovement.grappleOffset, delta) + offset;
+                targetPosition = Vector2.Lerp(transform.position, playerMovement.lastGrapplePoint, delta) + offset;
                 currentPosition = Vector2.Lerp(targetPosition, tongueTarget, tongueProgressionCurve.Evaluate(tongueDrawTime) * tongueProgressionSpeed);
             }
 
