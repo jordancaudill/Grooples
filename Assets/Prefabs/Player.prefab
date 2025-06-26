@@ -192,9 +192,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 920705b718afe9a49909a372940a7820, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 4
   _addedNetworkObject: {fileID: 9166242095118903001}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 9166242095118903001}
   lineRenderer: {fileID: 4815119977137823805}
   tongueAnimationCurve:
     serializedVersion: 2
@@ -894,6 +894,7 @@ MonoBehaviour:
   - {fileID: -7808635514866686121}
   - {fileID: -4369470990084180759}
   - {fileID: 8643613106555930240}
+  - {fileID: 3451043250967181955}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -980,7 +981,7 @@ MonoBehaviour:
   - {fileID: 701968169404931231}
   playerInput: {fileID: 1531998262079415352}
   playerInputManager: {fileID: 0}
-  popupForce: 1200
+  popupForce: 10
   grappleCooldown: 0.25
   maxDistance: 10
   minDistance: 1

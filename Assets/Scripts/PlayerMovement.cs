@@ -20,7 +20,7 @@ public class PlayerMovement : NetworkBehaviour
     public Vector2 moveInput;
     public Vector2 aimDirection;
     public Vector2 teleport;
-    public Vector2 popup;
+    public bool popup;
 
     // The object being grappled to, if any
     public GameObject grappleObject;
@@ -36,7 +36,7 @@ public class PlayerMovement : NetworkBehaviour
 
     public PlayerInput playerInput;
     public PlayerInputManager playerInputManager;
-    [SerializeField] public float popupForce = 1200f;
+    [SerializeField] public float popupForce = 3f;
     private float lastGrappleTime = -10f;
     [SerializeField] private float grappleCooldown = 0.25f;
     [SerializeField] public float maxDistance = 10f;
@@ -176,8 +176,9 @@ public class PlayerMovement : NetworkBehaviour
         if (_hit.transform.gameObject.layer == terrainLayerNumber && distance <= minPopupDistance)
         {
             // If the distance is less than the minimum, popup the player
-            popup = _hit.point;
-            lastGrapplePoint = popup;
+            popup = true;
+            lastGrapplePoint = _hit.point;
+            print("setting popup target");
             tongue.SetTongueTargetHit();
 
         }

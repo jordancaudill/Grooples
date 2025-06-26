@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
 
 public class PlayerController : NetworkBehaviour
 {
@@ -21,7 +22,7 @@ public class PlayerController : NetworkBehaviour
     public SpringJoint2D springJoint2D;
     private GameObject localGrappleObject;
     GameManager gameManager;
-
+    private bool localPopup = false;
 
     private void OnPlayerNumberChanged(int previous, int next, bool asServer)
     {
@@ -40,14 +41,14 @@ public class PlayerController : NetworkBehaviour
         // The normalized aim direction (if any)
         public Vector2 Aim;
         // The point the player is popping from
-        public Vector2 Popup;
+        public bool Popup;
         // the network id of the object being grappled to, if any
         public int GrappleObjectId;
         // Offset from the grapple object's position to the grapple point
         public Vector2 GrappleOffset;
 
 
-        public ReplicateData(Vector2 move, Vector2 teleport, Vector2 aim, Vector2 popup, int grappleObjectId, Vector2 grappleOffset) : this()
+        public ReplicateData(Vector2 move, Vector2 teleport, Vector2 aim, bool popup, int grappleObjectId, Vector2 grappleOffset) : this()
         {
             Move = move;
             Teleport = teleport;
@@ -122,6 +123,21 @@ public class PlayerController : NetworkBehaviour
         TimeManager.OnPostTick -= TimeManager_OnPostTick;
     }
 
+    private void Update()
+    {
+        if (!IsOwner)
+            return;
+
+        // For single-frame inputs, capture the input in Update()
+        if (!localPopup && playerMovement.popup)
+        {
+            localPopup = true;
+            playerMovement.popup = false; // Reset popup after using it
+        }
+
+    }
+
+
     private void TimeManager_OnTick()
     {
         RunInputs(CreateReplicateData());
@@ -131,6 +147,7 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner)
             return default;
+
 
 
         //Build the replicate data with all inputs which affect the prediction.
@@ -144,7 +161,19 @@ public class PlayerController : NetworkBehaviour
             }
         }
 
-        ReplicateData md = new ReplicateData(playerMovement.moveInput, playerMovement.teleport, playerMovement.aimDirection, playerMovement.popup, grappleObjectNetworkId, playerMovement.grappleOffset);
+
+        ReplicateData md = new ReplicateData(
+            playerMovement.moveInput,
+            playerMovement.teleport,
+            playerMovement.aimDirection,
+            localPopup, // use the stored value
+            grappleObjectNetworkId,
+            playerMovement.grappleOffset
+        );
+
+
+        // Reset local single-frame inputs
+        localPopup = false;
         return md;
     }
 
@@ -168,16 +197,19 @@ public class PlayerController : NetworkBehaviour
             PredictionRigidbody.AddForce(new Vector2(data.Move.x * playerMovement.moveSpeed, 0), ForceMode2D.Force);
         }
 
-        if (data.Popup != Vector2.zero)
+        if (data.Popup)
         {
-            Vector2 distanceVector = (Vector2)tongue.transform.position - data.Popup;
-            PredictionRigidbody.AddForce(distanceVector.normalized * playerMovement.popupForce, ForceMode2D.Force);
+            //Vector2 distanceVector = (Vector2)tongue.transform.position - data.Aim;
+            PredictionRigidbody.AddForce(data.Aim * -1 * playerMovement.popupForce, ForceMode2D.Impulse);
+            print("popup" + playerNumber.Value + " | " + IsOwner + " | " + data.Aim);
 
-            playerMovement.popup = Vector2.zero;
+
         }
+
         if (localGrappleObject == null && data.GrappleObjectId != 0)
         {
             // Store localGrappleObject so we don't have to look it up every tick.
+            print("grappling");
             localGrappleObject = GetObjectById(data.GrappleObjectId);
             if (localGrappleObject != null)
             {
