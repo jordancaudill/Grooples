@@ -972,7 +972,7 @@ MonoBehaviour:
   moveInput: {x: 0, y: 0}
   aimDirection: {x: 0, y: 0}
   teleport: {x: 0, y: 0}
-  popup: {x: 0, y: 0}
+  popup: 0
   grappleObject: {fileID: 0}
   grappleOffset: {x: 0, y: 0}
   lastGrapplePoint: {x: 0, y: 0}

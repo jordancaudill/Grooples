@@ -180,6 +180,20 @@ public class PlayerController : NetworkBehaviour
     [Replicate]
     private void RunInputs(ReplicateData data, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable)
     {
+
+        //If in the future then simply zero out velocities
+        //and exit the method to prevent checking any input logic.
+        //Using this approach will allow objects to still collide with
+        //the rigidbody.
+        // https://fish-networking.gitbook.io/docs/guides/features/prediction/creating-code/understanding-replicatestate/using-states-in-code
+        if (state.IsFuture())
+        {
+            PredictionRigidbody.Velocity(Vector2.zero);
+            PredictionRigidbody.AngularVelocity(0);
+            return;
+        }
+
+
         //Be sure to always apply and set velocties using PredictionRigidbody
         //and never on the rigidbody itself; this includes if also accessing from
         //another script.
