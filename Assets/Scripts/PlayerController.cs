@@ -132,6 +132,7 @@ public class PlayerController : NetworkBehaviour
         if (!IsOwner)
             return default;
 
+
         //Build the replicate data with all inputs which affect the prediction.
         int grappleObjectNetworkId = 0;
         if (playerMovement.grappleObject != null)
@@ -153,7 +154,6 @@ public class PlayerController : NetworkBehaviour
         //Be sure to always apply and set velocties using PredictionRigidbody
         //and never on the rigidbody itself; this includes if also accessing from
         //another script.
-
 
         if (data.Teleport != Vector2.zero)
         {
@@ -194,7 +194,21 @@ public class PlayerController : NetworkBehaviour
             springJoint2D.connectedAnchor = Vector2.zero;
         }
 
+        if (!IsOwner)
+        {
+            if (playerMovement != null)
+            {
+                playerMovement.aimDirection = data.Aim;
+                playerMovement.grappleOffset = data.GrappleOffset;
+                playerMovement.grappleObject = localGrappleObject;
+                if (localGrappleObject != null)
+                {
+                    playerMovement.lastGrapplePoint = (Vector2)localGrappleObject.transform.TransformPoint(data.GrappleOffset);
 
+                }
+
+            }
+        }
 
         PredictionRigidbody.Simulate();
     }

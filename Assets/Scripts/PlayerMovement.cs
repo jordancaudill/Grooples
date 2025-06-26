@@ -62,7 +62,7 @@ public class PlayerMovement : NetworkBehaviour
 
     private void Update()
     {
-        if (playerInput.currentControlScheme != "Gamepad")
+        if (IsOwner && playerInput.currentControlScheme != "Gamepad")
         {
             // aim grapple on kbm
             Vector2 lookPosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
@@ -73,6 +73,9 @@ public class PlayerMovement : NetworkBehaviour
         if (grappleObject == null)
         {
             tongue.SetTongueTargetDefault();
+        } else
+        {
+            tongue.SetTongueTargetHit();
         }
 
     }
