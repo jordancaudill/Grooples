@@ -97,7 +97,12 @@ public class PlayerMovement : NetworkBehaviour
         {
             // moves player on gamepad
             //moveInput = context.ReadValue<Vector2>();
-            aimDirection = (context.ReadValue<Vector2>().normalized);
+            Vector2 readInput = context.ReadValue<Vector2>();
+            if (readInput != Vector2.zero)
+            {
+                aimDirection = (readInput.normalized);
+
+            }
             if (grappleObject != null)
             {
                 moveInput = context.ReadValue<Vector2>();
