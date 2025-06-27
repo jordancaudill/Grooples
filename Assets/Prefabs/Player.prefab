@@ -303,7 +303,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &8947497731421286986
 Transform:
   m_ObjectHideFlags: 0
@@ -981,6 +981,7 @@ MonoBehaviour:
   tongue: {fileID: 3451043250967181955}
   playerColliders:
   - {fileID: 701968169404931231}
+  - {fileID: 1232718486844627212}
   playerInput: {fileID: 1531998262079415352}
   playerInputManager: {fileID: 0}
   popupForce: 10
