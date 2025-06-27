@@ -23,6 +23,8 @@ public class PlayerController : NetworkBehaviour
     private GameObject localGrappleObject;
     GameManager gameManager;
     private bool localPopup = false;
+    private bool localStartGrapple = false;
+    private bool localStopGrapple = false;
 
     private void OnPlayerNumberChanged(int previous, int next, bool asServer)
     {
@@ -46,9 +48,11 @@ public class PlayerController : NetworkBehaviour
         public int GrappleObjectId;
         // Offset from the grapple object's position to the grapple point
         public Vector2 GrappleOffset;
+        public bool StartGrapple;
+        public bool StopGrapple;
 
 
-        public ReplicateData(Vector2 move, Vector2 teleport, Vector2 aim, bool popup, int grappleObjectId, Vector2 grappleOffset) : this()
+        public ReplicateData(Vector2 move, Vector2 teleport, Vector2 aim, bool popup, int grappleObjectId, Vector2 grappleOffset, bool startGrapple, bool stopGrapple) : this()
         {
             Move = move;
             Teleport = teleport;
@@ -56,6 +60,8 @@ public class PlayerController : NetworkBehaviour
             Popup = popup;
             GrappleObjectId = grappleObjectId;
             GrappleOffset = grappleOffset;
+            StartGrapple = startGrapple;
+            StopGrapple = stopGrapple;
         }
 
         private uint _tick;
@@ -134,6 +140,21 @@ public class PlayerController : NetworkBehaviour
             localPopup = true;
             playerMovement.popup = false; // Reset popup after using it
         }
+        // For single-frame inputs, capture the input in Update()
+        if (!localStartGrapple && playerMovement.startGrapple)
+        {
+            localStartGrapple = true;
+            playerMovement.startGrapple = false; // Reset startGrapple after using it
+
+        }
+        if (!localStopGrapple && playerMovement.stopGrapple)
+        {
+            localStopGrapple = true;
+            playerMovement.stopGrapple = false; // Reset startGrapple after using it
+
+        }
+
+
 
     }
 
@@ -168,12 +189,17 @@ public class PlayerController : NetworkBehaviour
             playerMovement.aimDirection,
             localPopup, // use the stored value
             grappleObjectNetworkId,
-            playerMovement.grappleOffset
+            playerMovement.grappleOffset,
+            localStartGrapple, // use the stored value
+            localStopGrapple // use the stored value
+
         );
 
 
         // Reset local single-frame inputs
         localPopup = false;
+        localStartGrapple = false;
+        localStopGrapple = false;
         return md;
     }
 
@@ -213,24 +239,24 @@ public class PlayerController : NetworkBehaviour
 
         if (data.Popup)
         {
-            //Vector2 distanceVector = (Vector2)tongue.transform.position - data.Aim;
             PredictionRigidbody.AddForce(data.Aim * -1 * playerMovement.popupForce, ForceMode2D.Impulse);
-            print("popup" + playerNumber.Value + " | " + IsOwner + " | " + data.Aim);
-
-
         }
 
         if (localGrappleObject == null && data.GrappleObjectId != 0)
         {
             // Store localGrappleObject so we don't have to look it up every tick.
-            print("grappling");
-            localGrappleObject = GetObjectById(data.GrappleObjectId);
-            if (localGrappleObject != null)
+            if (!localGrappleObject )
+            {
+                localGrappleObject = GetObjectById(data.GrappleObjectId);
+            }
+            if (!springJoint2D.enabled && localGrappleObject != null)
             {
                 springJoint2D.connectedBody = localGrappleObject.GetComponent<Rigidbody2D>();
                 springJoint2D.connectedAnchor = data.GrappleOffset;
                 springJoint2D.enabled = true;
+
             }
+
         }
         else if (localGrappleObject != null && data.GrappleObjectId == 0)
         {
@@ -240,20 +266,30 @@ public class PlayerController : NetworkBehaviour
             springJoint2D.connectedAnchor = Vector2.zero;
         }
 
-        if (!IsOwner)
+        if (!IsOwner && playerMovement != null)
         {
-            if (playerMovement != null)
+            if (data.Aim != Vector2.zero)
             {
                 playerMovement.aimDirection = data.Aim;
-                playerMovement.grappleOffset = data.GrappleOffset;
-                playerMovement.grappleObject = localGrappleObject;
-                if (localGrappleObject != null)
-                {
-                    playerMovement.lastGrapplePoint = (Vector2)localGrappleObject.transform.TransformPoint(data.GrappleOffset);
-
-                }
+            }
+            
+            if (localGrappleObject != null)
+            {
+                playerMovement.lastGrapplePoint = (Vector2)localGrappleObject.transform.TransformPoint(data.GrappleOffset);
 
             }
+
+            if (data.StartGrapple)
+            {
+                playerMovement.grappleOffset = data.GrappleOffset;
+                playerMovement.grappleObject = localGrappleObject;
+            }
+            if (data.StopGrapple)
+            {
+                playerMovement.grappleOffset = Vector2.zero;
+                playerMovement.grappleObject = null;
+            }
+
         }
 
         PredictionRigidbody.Simulate();

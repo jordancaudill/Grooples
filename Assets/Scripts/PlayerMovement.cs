@@ -21,6 +21,8 @@ public class PlayerMovement : NetworkBehaviour
     public Vector2 aimDirection;
     public Vector2 teleport;
     public bool popup;
+    public bool startGrapple = false;
+    public bool stopGrapple = false;
 
     // The object being grappled to, if any
     public GameObject grappleObject;
@@ -69,11 +71,11 @@ public class PlayerMovement : NetworkBehaviour
             aimDirection = (lookPosition - (Vector2)tongue.transform.position).normalized;
 
         }
-
         if (grappleObject == null)
         {
             tongue.SetTongueTargetDefault();
-        } else
+        }
+        else
         {
             tongue.SetTongueTargetHit();
         }
@@ -100,10 +102,10 @@ public class PlayerMovement : NetworkBehaviour
         {
             // kbm handled in Update()
         }
-        if (grappleObject == null)
-        {
-            tongue.SetTongueTargetDefault();
-        }
+        //if (grappleObject == null)
+        //{
+        //    tongue.SetTongueTargetDefault();
+        //}
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -164,6 +166,8 @@ public class PlayerMovement : NetworkBehaviour
         lastGrappleTime = Time.time;
         grappleOffset = Vector2.zero;
         grappleObject = null;
+        stopGrapple = true;
+
         tongue.SetTongueTargetDefault();
 
     }
@@ -178,7 +182,6 @@ public class PlayerMovement : NetworkBehaviour
             // If the distance is less than the minimum, popup the player
             popup = true;
             lastGrapplePoint = _hit.point;
-            print("setting popup target");
             tongue.SetTongueTargetHit();
 
         }
@@ -190,6 +193,7 @@ public class PlayerMovement : NetworkBehaviour
             grappleOffset = _hit.transform.InverseTransformPoint(_hit.point);
             grappleObject = _hit.transform.gameObject;
             lastGrapplePoint = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
+            startGrapple = true;
             tongue.SetTongueTargetHit();
 
         }

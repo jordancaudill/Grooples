@@ -44,18 +44,21 @@ public class Tongue : NetworkBehaviour
     public void SetTongueTargetDefault()
     {
         tongueTarget = (Vector2)transform.position + (playerMovement.aimDirection * defaultTongueLength);
-
     }
 
     public void SetTongueTargetHit()
     {
+        if (playerMovement.grappleObject == null || playerMovement.grappleOffset == null)
+        {
+            return;
+        }
         tongueTarget = (Vector2)playerMovement.grappleObject.transform.TransformPoint(playerMovement.grappleOffset);
     }
 
     public void SetTongueTargetMiss()
     {
         ResetTongueWaves();
-        tongueTarget =  (Vector2)transform.position + (playerMovement.aimDirection * playerMovement.maxDistance);
+        tongueTarget = (Vector2)transform.position + (playerMovement.aimDirection * playerMovement.maxDistance);
     }
 
     void DrawTongue()
