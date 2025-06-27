@@ -18,7 +18,7 @@ public class PlayerController : NetworkBehaviour
 
     private PlayerMovement playerMovement;
     public Rigidbody2D rb;
-    public GameObject tongue;
+    public Tongue tongue;
     public SpringJoint2D springJoint2D;
     private GameObject localGrappleObject;
     GameManager gameManager;
@@ -283,11 +283,13 @@ public class PlayerController : NetworkBehaviour
             {
                 playerMovement.grappleOffset = data.GrappleOffset;
                 playerMovement.grappleObject = localGrappleObject;
+                tongue.ResetTongueWaves();
             }
             if (data.StopGrapple)
             {
                 playerMovement.grappleOffset = Vector2.zero;
                 playerMovement.grappleObject = null;
+                tongue.ResetTongueWaves();
             }
 
         }
@@ -379,7 +381,7 @@ public class PlayerController : NetworkBehaviour
         string playerColor = playerColors[playerNumber.Value];
         ColorUtility.TryParseHtmlString(playerColor, out Color color);
 
-        tongue.GetComponent<LineRenderer>().colorGradient = new Gradient
+        tongue.gameObject.GetComponent<LineRenderer>().colorGradient = new Gradient
         {
             colorKeys = new GradientColorKey[]
             {

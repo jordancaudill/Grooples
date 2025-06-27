@@ -167,7 +167,7 @@ public class PlayerMovement : NetworkBehaviour
         grappleOffset = Vector2.zero;
         grappleObject = null;
         stopGrapple = true;
-
+        tongue.ResetTongueWaves();
         tongue.SetTongueTargetDefault();
 
     }

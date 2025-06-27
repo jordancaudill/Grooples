@@ -671,7 +671,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 9166242095118903001}
   _networkObjectCache: {fileID: 9166242095118903001}
   rb: {fileID: 5989748641023836935}
-  tongue: {fileID: 2780419219925719995}
+  tongue: {fileID: 3451043250967181955}
   springJoint2D: {fileID: 1848247816056139402}
 --- !u!231 &1848247816056139402
 SpringJoint2D:
@@ -973,6 +973,8 @@ MonoBehaviour:
   aimDirection: {x: 0, y: 0}
   teleport: {x: 0, y: 0}
   popup: 0
+  startGrapple: 0
+  stopGrapple: 0
   grappleObject: {fileID: 0}
   grappleOffset: {x: 0, y: 0}
   lastGrapplePoint: {x: 0, y: 0}
