@@ -28,7 +28,7 @@ public class PlayerController : NetworkBehaviour
 
     private void OnPlayerNumberChanged(int previous, int next, bool asServer)
     {
-        AssignSpriteToPlayer();
+        SetPlayerColor();
     }
 
 
@@ -245,7 +245,7 @@ public class PlayerController : NetworkBehaviour
         if (localGrappleObject == null && data.GrappleObjectId != 0)
         {
             // Store localGrappleObject so we don't have to look it up every tick.
-            if (!localGrappleObject )
+            if (!localGrappleObject)
             {
                 localGrappleObject = GetObjectById(data.GrappleObjectId);
             }
@@ -272,11 +272,12 @@ public class PlayerController : NetworkBehaviour
             {
                 playerMovement.aimDirection = data.Aim;
             }
-            
+
             if (localGrappleObject != null)
             {
                 playerMovement.lastGrapplePoint = (Vector2)localGrappleObject.transform.TransformPoint(data.GrappleOffset);
-            } else if (data.Popup)
+            }
+            else if (data.Popup)
             {
                 playerMovement.lastGrapplePoint = tongue.transform.TransformPoint(data.Aim * -1 * tongue.defaultTongueLength);
 
@@ -339,6 +340,13 @@ public class PlayerController : NetworkBehaviour
 
     }
 
+    public override void OnStartServer()
+    {
+        // Initialize the playerNumber on the server
+        playerNumber.Value = 0;
+        SetPlayerColor();
+    }
+
     private void Start()
     {
         if (IsServerStarted)
@@ -357,38 +365,49 @@ public class PlayerController : NetworkBehaviour
 
     }
 
-    private void AssignSpriteToPlayer()
+    private void SetPlayerColor()
     {
-        Dictionary<int, string> playerSprites = new Dictionary<int, string>
-        {
-            { 0, "Sprites/player_pink" },
-            { 1, "Sprites/player_green" },
-            { 2, "Sprites/player_yellow" },
-            { 3, "Sprites/player_purple" },
-        };
-        string playerSprite = playerSprites[playerNumber.Value];
-        GameObject graphicObject = transform.Find("GraphicalObject").gameObject;
-        Sprite resource = Resources.Load<Sprite>(playerSprite);
-        graphicObject.GetComponent<SpriteRenderer>().sprite = resource;
 
-
-        // Assign a color to the player based on the OwnerClientId or any other logic
         Dictionary<int, string> playerColors = new Dictionary<int, string>
         {
-            { 0, "#EA61CC" },
-            { 1, "#689581" },
-            { 2, "#E9AC6F" },
-            { 3, "#9576A6" },
+            { 0, "#DE83CA" }, // pink
+            { 1, "#82C190" }, // green
+            { 2, "#FFE888" }, // yellow
+            { 3, "#A887DB" }, // purple
+            { 4, "#95E0DC" }, // teal
+            { 5, "#C36058" }, // red
+            { 6, "#5D71B7" }, // blue
+            { 7, "#E7A86C" } // orange
+
         };
 
         string playerColor = playerColors[playerNumber.Value];
-        ColorUtility.TryParseHtmlString(playerColor, out Color color);
+        ColorUtility.TryParseHtmlString(playerColor, out Color newPlayerColor);
+        GameObject graphicObject = transform.Find("GraphicalObject").gameObject;
+        graphicObject.GetComponent<SpriteRenderer>().color = newPlayerColor;
+
+
+        Dictionary<int, string> tongueColors = new Dictionary<int, string>
+        {
+            { 0, "#EA61CC" }, // pink
+            { 1, "#689581" }, // green
+            { 2, "#E9AC6F" }, // yellow
+            { 3, "#9576A6" }, // purple
+            { 4, "#2FEFE4" }, // teal
+            { 5, "#C84134" }, // red
+            { 6, "#3B64EC" }, // blue
+            { 7, "#EF9441" } // orange
+
+        };
+
+        string tongueColor = tongueColors[playerNumber.Value];
+        ColorUtility.TryParseHtmlString(tongueColor, out Color newTongueColor);
 
         tongue.gameObject.GetComponent<LineRenderer>().colorGradient = new Gradient
         {
             colorKeys = new GradientColorKey[]
             {
-                new GradientColorKey(color, 1f)
+                new GradientColorKey(newTongueColor, 1f)
             },
             alphaKeys = new GradientAlphaKey[]
             {
