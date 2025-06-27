@@ -276,6 +276,9 @@ public class PlayerController : NetworkBehaviour
             if (localGrappleObject != null)
             {
                 playerMovement.lastGrapplePoint = (Vector2)localGrappleObject.transform.TransformPoint(data.GrappleOffset);
+            } else if (data.Popup)
+            {
+                playerMovement.lastGrapplePoint = tongue.transform.TransformPoint(data.Aim * -1 * tongue.defaultTongueLength);
 
             }
 
