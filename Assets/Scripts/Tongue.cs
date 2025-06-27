@@ -19,6 +19,7 @@ public class Tongue : NetworkBehaviour
     private float tongueWaveSize = 0;
     private bool straightLine = true;
     public Vector2 tongueTarget;
+    private int playersLayerNumber = 7;
 
     public PlayerMovement playerMovement;
 
@@ -52,7 +53,16 @@ public class Tongue : NetworkBehaviour
         {
             return;
         }
-        tongueTarget = (Vector2)playerMovement.grappleObject.transform.TransformPoint(playerMovement.grappleOffset);
+        if (playerMovement.grappleObject.layer == playersLayerNumber)
+        {
+            // grapple target is a player, so set the tongue target to be their GrapicalObject
+            GameObject graphicObject = playerMovement.grappleObject.transform.Find("GraphicalObject").gameObject;
+            tongueTarget = (Vector2)graphicObject.transform.TransformPoint(playerMovement.grappleOffset);
+        }
+        else
+        {
+            tongueTarget = (Vector2)playerMovement.grappleObject.transform.TransformPoint(playerMovement.grappleOffset);
+        }
     }
 
     public void SetTongueTargetMiss()
