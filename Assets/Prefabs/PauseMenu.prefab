@@ -177,11 +177,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7322e2c07a77bc34a87a425ec4d3e38f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 0}
+  _networkObjectCache: {fileID: 0}
   levelPanel: {fileID: 0}
   pauseCanvas: {fileID: 8451449942622505591}
   mainMenuButtons: {fileID: 0}
   playButton: {fileID: 0}
-  level1Button: {fileID: 0}
+  connectedButtons: {fileID: 0}
+  unconnectedButtons: {fileID: 0}
+  _networkManager: {fileID: 0}
   isPaused: 0
 --- !u!1 &2071473298981657854
 GameObject:
