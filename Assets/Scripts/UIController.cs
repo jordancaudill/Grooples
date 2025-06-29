@@ -1,6 +1,8 @@
+using FishNet;
 using FishNet.Managing;
 using FishNet.Object;
 using FishNet.Transporting;
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -11,11 +13,13 @@ public class UIController : NetworkBehaviour
 {
 
     public GameObject levelPanel;
-    public GameObject pauseCanvas; 
+    public GameObject pauseCanvas;
     public GameObject mainMenuButtons;
     public GameObject playButton;
     public GameObject connectedButtons;
     public GameObject unconnectedButtons;
+    public NetworkObject lobbyPlayerPrefab;
+    public GameObject lobbyPlayerGrid;
 
     public NetworkManager _networkManager;
 
@@ -52,7 +56,7 @@ public class UIController : NetworkBehaviour
 
     void CheckForPause()
     {
-        if (pauseCanvas != null && pauseAction.WasPressedThisFrame() )
+        if (pauseCanvas != null && pauseAction.WasPressedThisFrame())
         {
             if (isPaused)
             {
@@ -105,6 +109,9 @@ public class UIController : NetworkBehaviour
     {
         _networkManager.ServerManager.StartConnection();
         _networkManager.ClientManager.StartConnection();
+        NetworkObject lobbyPlayer = Instantiate(lobbyPlayerPrefab);
+        lobbyPlayer.transform.SetParent(lobbyPlayerGrid.transform, false);
+        Spawn(lobbyPlayer);
 
     }
 
@@ -115,7 +122,15 @@ public class UIController : NetworkBehaviour
 
     public void ConnectToIP()
     {
-        _networkManager.ClientManager.StartConnection(ipInput);
+        print("connecting to " + ipInput);
+        if (ipInput == null)
+        {
+            _networkManager.ClientManager.StartConnection();
+        }
+        else
+        {
+            _networkManager.ClientManager.StartConnection(ipInput);
+        }
     }
 
     public void LeaveParty()
@@ -130,15 +145,20 @@ public class UIController : NetworkBehaviour
 
 
 
-    private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs obj)
+    public void ClientManager_OnClientConnectionState(ClientConnectionStateArgs obj)
     {
-        print(obj.ConnectionState);
         if (connectedButtons && unconnectedButtons)
         {
             if (obj.ConnectionState == LocalConnectionState.Started)
             {
                 unconnectedButtons.SetActive(false);
                 connectedButtons.SetActive(true);
+
+                //GameObject lobbyPlayer = Instantiate(lobbyPlayerPrefab);
+                //lobbyPlayer.transform.SetParent(lobbyPlayerGrid.transform, false);
+                //Spawn(lobbyPlayer);
+
+
             }
             else
             {
@@ -150,17 +170,29 @@ public class UIController : NetworkBehaviour
     }
 
 
-    private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs obj)
+    public void ServerManager_OnServerConnectionState(ServerConnectionStateArgs obj)
     {
-        //_serverState = obj.ConnectionState;
-        //UpdateColor(obj.ConnectionState, ref _serverIndicator);
-        print(obj.ConnectionState);
+        print("ServerManager_OnServerConnectionState ooga booga booga");
+        if (obj.ConnectionState == LocalConnectionState.Started)
+        {
+
+        }
         if (playButton)
         {
             playButton.GetComponent<Button>().interactable = obj.ConnectionState == LocalConnectionState.Started;
-
         }
     }
+
+    [ServerRpc]
+    private void SpawnLobbyPlayer()
+    {
+        NetworkObject lobbyPlayer = Instantiate(lobbyPlayerPrefab);
+        lobbyPlayer.transform.SetParent(lobbyPlayerGrid.transform, false);
+        Spawn(lobbyPlayer);
+
+
+    }
+
 
 
     public void ExitGame()
