@@ -72,8 +72,6 @@ public class PlayerController : NetworkBehaviour
 
     }
 
-
-
     private GameObject GetObjectById(int networkObjectId)
     {
         NetworkObject found;
@@ -359,61 +357,32 @@ public class PlayerController : NetworkBehaviour
     [ServerRpc]
     private void AddPlayer()
     {
-        playerNumber.Value = gameManager.playerCount.Value;
-        gameManager.playerCount.Value++;
+        playerNumber.Value = ServerManager.Clients.Count - 1;
         name = "Player_" + playerNumber.Value;
 
     }
 
     private void SetPlayerColor()
     {
+        //string playerColor = PlayerColors.playerColors[playerNumber.Value];
+        //ColorUtility.TryParseHtmlString(playerColor, out Color newPlayerColor);
+        //GameObject graphicObject = transform.Find("GraphicalObject").gameObject;
+        //graphicObject.GetComponent<SpriteRenderer>().color = newPlayerColor;
 
-        Dictionary<int, string> playerColors = new Dictionary<int, string>
-        {
-            { 0, "#DE83CA" }, // pink
-            { 1, "#82C190" }, // green
-            { 2, "#FFE888" }, // yellow
-            { 3, "#A887DB" }, // purple
-            { 4, "#95E0DC" }, // teal
-            { 5, "#C36058" }, // red
-            { 6, "#5D71B7" }, // blue
-            { 7, "#E7A86C" } // orange
+        //string tongueColor = PlayerColors.tongueColors[playerNumber.Value];
+        //ColorUtility.TryParseHtmlString(tongueColor, out Color newTongueColor);
 
-        };
-
-        string playerColor = playerColors[playerNumber.Value];
-        ColorUtility.TryParseHtmlString(playerColor, out Color newPlayerColor);
-        GameObject graphicObject = transform.Find("GraphicalObject").gameObject;
-        graphicObject.GetComponent<SpriteRenderer>().color = newPlayerColor;
-
-
-        Dictionary<int, string> tongueColors = new Dictionary<int, string>
-        {
-            { 0, "#EA61CC" }, // pink
-            { 1, "#689581" }, // green
-            { 2, "#E9AC6F" }, // yellow
-            { 3, "#9576A6" }, // purple
-            { 4, "#2FEFE4" }, // teal
-            { 5, "#C84134" }, // red
-            { 6, "#3B64EC" }, // blue
-            { 7, "#EF9441" } // orange
-
-        };
-
-        string tongueColor = tongueColors[playerNumber.Value];
-        ColorUtility.TryParseHtmlString(tongueColor, out Color newTongueColor);
-
-        tongue.gameObject.GetComponent<LineRenderer>().colorGradient = new Gradient
-        {
-            colorKeys = new GradientColorKey[]
-            {
-                new GradientColorKey(newTongueColor, 1f)
-            },
-            alphaKeys = new GradientAlphaKey[]
-            {
-                new GradientAlphaKey(1f, 1f)
-            }
-        };
+        //tongue.gameObject.GetComponent<LineRenderer>().colorGradient = new Gradient
+        //{
+        //    colorKeys = new GradientColorKey[]
+        //    {
+        //        new GradientColorKey(newTongueColor, 1f)
+        //    },
+        //    alphaKeys = new GradientAlphaKey[]
+        //    {
+        //        new GradientAlphaKey(1f, 1f)
+        //    }
+        //};
 
     }
 }

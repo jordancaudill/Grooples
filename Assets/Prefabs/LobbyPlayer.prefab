@@ -27,8 +27,8 @@ RectTransform:
   m_GameObject: {fileID: 2008349000919596345}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1847183226066097844}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -102,8 +102,8 @@ RectTransform:
   m_GameObject: {fileID: 2327773745938714038}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1847183226066097844}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -177,14 +177,14 @@ RectTransform:
   m_GameObject: {fileID: 5700657074955846900}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1847183226066097844}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 81.00815}
+  m_AnchoredPosition: {x: 0, y: 42.461975}
   m_SizeDelta: {x: 175, y: 41}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5701692431271423546
@@ -413,6 +413,7 @@ MonoBehaviour:
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
   - {fileID: 8101926509950396854}
+  - {fileID: 8529793685299853588}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -473,7 +474,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd4ed0a3d1b4d714f964401c41710dbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
-  _addedNetworkObject: {fileID: 0}
-  _networkObjectCache: {fileID: 0}
-  lobbyPlayerGrid: {fileID: 0}
+  _componentIndexCache: 1
+  _addedNetworkObject: {fileID: 2874564410142259269}
+  _networkObjectCache: {fileID: 2874564410142259269}
+  playerName: {fileID: 5003161680363646782}
+  playerImage: {fileID: 8044643012499147979}

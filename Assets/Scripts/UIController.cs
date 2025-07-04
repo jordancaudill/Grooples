@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 public class UIController : NetworkBehaviour
@@ -20,8 +21,11 @@ public class UIController : NetworkBehaviour
     public GameObject unconnectedButtons;
     public NetworkObject lobbyPlayerPrefab;
     public GameObject lobbyPlayerGrid;
-
+    public NetworkObject gameManagerPrefab;
+    public GameObject keyboardIcons;
+    public GameObject gamepadIcons;
     public NetworkManager _networkManager;
+    public PlayerInput playerInput;
 
     InputAction pauseAction;
     private string ipInput;
@@ -48,10 +52,25 @@ public class UIController : NetworkBehaviour
     }
 
 
+
     // Update is called once per frame
     void Update()
     {
         CheckForPause();
+        CheckUIButtons();
+    }
+
+    void CheckUIButtons()
+    {
+        if (keyboardIcons != null)
+        {
+            bool isGamepad = playerInput.currentControlScheme == "Gamepad";
+            gamepadIcons.SetActive(isGamepad && _networkManager.ClientManager.Started);
+            keyboardIcons.SetActive(!isGamepad && _networkManager.ClientManager.Started);
+
+        }
+
+
     }
 
     void CheckForPause()
@@ -109,9 +128,6 @@ public class UIController : NetworkBehaviour
     {
         _networkManager.ServerManager.StartConnection();
         _networkManager.ClientManager.StartConnection();
-        NetworkObject lobbyPlayer = Instantiate(lobbyPlayerPrefab);
-        lobbyPlayer.transform.SetParent(lobbyPlayerGrid.transform, false);
-        Spawn(lobbyPlayer);
 
     }
 
@@ -122,7 +138,6 @@ public class UIController : NetworkBehaviour
 
     public void ConnectToIP()
     {
-        print("connecting to " + ipInput);
         if (ipInput == null)
         {
             _networkManager.ClientManager.StartConnection();
@@ -147,18 +162,20 @@ public class UIController : NetworkBehaviour
 
     public void ClientManager_OnClientConnectionState(ClientConnectionStateArgs obj)
     {
+        if (IsServerStarted)
+        {
+            NetworkObject gameManager = Instantiate(gameManagerPrefab);
+            Spawn(gameManager);
+            // Add host player to gameManager._players
+            gameManager.GetComponent<GameManager>().AddPlayer(0);
+
+        }
         if (connectedButtons && unconnectedButtons)
         {
             if (obj.ConnectionState == LocalConnectionState.Started)
             {
                 unconnectedButtons.SetActive(false);
                 connectedButtons.SetActive(true);
-
-                //GameObject lobbyPlayer = Instantiate(lobbyPlayerPrefab);
-                //lobbyPlayer.transform.SetParent(lobbyPlayerGrid.transform, false);
-                //Spawn(lobbyPlayer);
-
-
             }
             else
             {
@@ -172,28 +189,11 @@ public class UIController : NetworkBehaviour
 
     public void ServerManager_OnServerConnectionState(ServerConnectionStateArgs obj)
     {
-        print("ServerManager_OnServerConnectionState ooga booga booga");
-        if (obj.ConnectionState == LocalConnectionState.Started)
-        {
-
-        }
         if (playButton)
         {
             playButton.GetComponent<Button>().interactable = obj.ConnectionState == LocalConnectionState.Started;
         }
     }
-
-    [ServerRpc]
-    private void SpawnLobbyPlayer()
-    {
-        NetworkObject lobbyPlayer = Instantiate(lobbyPlayerPrefab);
-        lobbyPlayer.transform.SetParent(lobbyPlayerGrid.transform, false);
-        Spawn(lobbyPlayer);
-
-
-    }
-
-
 
     public void ExitGame()
     {
