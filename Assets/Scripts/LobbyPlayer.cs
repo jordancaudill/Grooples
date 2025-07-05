@@ -26,6 +26,7 @@ public class LobbyPlayer : NetworkBehaviour
         {
             playerName.text = "";
         }
+        print("OnStartClient");
         StartCoroutine(WaitForGameManager());
     }
 

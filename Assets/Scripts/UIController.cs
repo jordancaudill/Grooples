@@ -1,5 +1,6 @@
 using FishNet;
 using FishNet.Managing;
+using FishNet.Managing.Timing;
 using FishNet.Object;
 using FishNet.Transporting;
 using System;
@@ -10,7 +11,7 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
-public class UIController : NetworkBehaviour
+public class UIController : MonoBehaviour
 {
 
     public GameObject levelPanel;
@@ -36,21 +37,23 @@ public class UIController : NetworkBehaviour
     void Start()
     {
         _networkManager = FindFirstObjectByType<NetworkManager>();
-        _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
         _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
+        _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
 
         pauseAction = InputSystem.actions.FindAction("Pause");
     }
+
+
 
     private void OnDestroy()
     {
         if (_networkManager == null)
             return;
 
-        _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
         _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
-    }
+        _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
 
+    }
 
 
     // Update is called once per frame
@@ -162,14 +165,7 @@ public class UIController : NetworkBehaviour
 
     public void ClientManager_OnClientConnectionState(ClientConnectionStateArgs obj)
     {
-        if (IsServerStarted)
-        {
-            NetworkObject gameManager = Instantiate(gameManagerPrefab);
-            Spawn(gameManager);
-            // Add host player to gameManager._players
-            gameManager.GetComponent<GameManager>().AddPlayer(0);
-
-        }
+        print("ClientManager_OnClientConnectionState");
         if (connectedButtons && unconnectedButtons)
         {
             if (obj.ConnectionState == LocalConnectionState.Started)
@@ -186,14 +182,25 @@ public class UIController : NetworkBehaviour
         }
     }
 
-
     public void ServerManager_OnServerConnectionState(ServerConnectionStateArgs obj)
     {
-        if (playButton)
+        print("ServerManager_OnServerConnectionState");
+        if (obj.ConnectionState == LocalConnectionState.Started)
         {
-            playButton.GetComponent<Button>().interactable = obj.ConnectionState == LocalConnectionState.Started;
+            print("spawning game manager");
+            NetworkObject gameManager = Instantiate(gameManagerPrefab);
+            _networkManager.ServerManager.Spawn(gameManager);
+            // Add host player to gameManager._players
+            gameManager.GetComponent<GameManager>().AddPlayer(0);
+            if (playButton)
+            {
+                playButton.GetComponent<Button>().interactable = obj.ConnectionState == LocalConnectionState.Started;
+            }
+
         }
+
     }
+
 
     public void ExitGame()
     {

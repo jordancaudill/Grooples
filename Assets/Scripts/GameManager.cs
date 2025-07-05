@@ -1,14 +1,9 @@
 using FishNet.Connection;
 using FishNet.Managing;
-using FishNet.Managing.Timing;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
-using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using UnityEngine.InputSystem;
-using static UnityEngine.Timeline.DirectorControlPlayable;
 
 public class Player
 {
@@ -21,17 +16,20 @@ public class GameManager : NetworkBehaviour
 
 
     public readonly SyncList<Player> _players = new SyncList<Player>();
+    public NetworkManager _networkManager;
 
 
     void Start()
     {
-        NetworkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
+        _networkManager = FindFirstObjectByType<NetworkManager>();
+
+        _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
 
     }
 
     private void OnDestroy()
     {
-        NetworkManager.ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
+        _networkManager.ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
 
     }
 
