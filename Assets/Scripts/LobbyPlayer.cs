@@ -59,8 +59,10 @@ public class LobbyPlayer : NetworkBehaviour
     private void OnPlayersChange(SyncListOperation op, int index,
     Player prev, Player next, bool asServer)
     {
-        if (op == SyncListOperation.Add && next != null && next.clientId == OwnerId)
+        if (op == SyncListOperation.Set && next != null && next.clientId == OwnerId && !asServer)
         {
+            //print(next.clientId + " | " + next.color);
+
             ColorUtility.TryParseHtmlString(PlayerColors.playerColors[next.color], out Color newPlayerColor);
             playerImage.color = newPlayerColor;
            

@@ -36,7 +36,6 @@ public class GameManager : NetworkBehaviour
 
     public void ServerManager_OnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs state)
     {
-        print("ServerManager_OnRemoteConnectionState");
         if (state.ConnectionState == RemoteConnectionState.Started)
         {
             AddPlayer(connection.ClientId);
@@ -54,14 +53,12 @@ public class GameManager : NetworkBehaviour
     [Server]
     public void AddPlayer(int newClientId)
     {
-        print("adding new player with client id " + newClientId);
         Player newPlayer = new Player();
         newPlayer.clientId = newClientId;
         newPlayer.color = GetFirstAvailableColor();
         _players.Add(newPlayer);
         //Call dirty on an index after modifying an entries field to force a synchronize. 
         _players.Dirty(0);
-        print(_players);
     }
 
     [Server]
@@ -78,12 +75,13 @@ public class GameManager : NetworkBehaviour
         }
     }
 
+
     // Sets the given player's color to the next available color
-    [ServerRpc]
-    private void SetPlayerNextColor(int clientId)
+    [ServerRpc(RequireOwnership = false)]
+    public void SetNextColorRpc(NetworkConnection conn = null)
     {
         // Find the player with the given clientId
-        int index = _players.FindIndex(p => p.clientId == clientId);
+        int index = _players.FindIndex(p => p.clientId == conn.ClientId);
         if (index >= 0)
         {
             Player player = _players[index];
@@ -95,11 +93,11 @@ public class GameManager : NetworkBehaviour
     }
 
     // Sets the given player's color to the previous available color
-    [ServerRpc]
-    private void SetPlayerPreviousColor(int clientId)
+    [ServerRpc(RequireOwnership = false)]
+    public void SetPreviousColorRpc(NetworkConnection conn = null)
     {
         // Find the player with the given clientId
-        int index = _players.FindIndex(p => p.clientId == clientId);
+        int index = _players.FindIndex(p => p.clientId == conn.ClientId);
         if (index >= 0)
         {
             Player player = _players[index];

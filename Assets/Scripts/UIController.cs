@@ -23,6 +23,7 @@ public class UIController : MonoBehaviour
     public NetworkObject lobbyPlayerPrefab;
     public GameObject lobbyPlayerGrid;
     public NetworkObject gameManagerPrefab;
+    private GameManager gameManager;
     public GameObject keyboardIcons;
     public GameObject gamepadIcons;
     public NetworkManager _networkManager;
@@ -32,7 +33,6 @@ public class UIController : MonoBehaviour
     private string ipInput;
 
     public bool isPaused = false;
-
 
     void Start()
     {
@@ -190,8 +190,8 @@ public class UIController : MonoBehaviour
             print("spawning game manager");
             NetworkObject gameManager = Instantiate(gameManagerPrefab);
             _networkManager.ServerManager.Spawn(gameManager);
-            // Add host player to gameManager._players
-            gameManager.GetComponent<GameManager>().AddPlayer(0);
+            //// Add host player to gameManager._players
+            //gameManager.GetComponent<GameManager>().AddPlayer(0);
             if (playButton)
             {
                 playButton.GetComponent<Button>().interactable = obj.ConnectionState == LocalConnectionState.Started;
@@ -199,6 +199,38 @@ public class UIController : MonoBehaviour
 
         }
 
+    }
+
+    public void OnNextColor(InputAction.CallbackContext context)
+    {
+
+        if (context.performed)
+        {
+            if (gameManager == null)
+            {
+                gameManager = FindFirstObjectByType<GameManager>();
+            }
+            if (gameManager)
+            {
+                gameManager.SetNextColorRpc();
+            }
+        }
+    }
+
+    public void OnPreviousColor(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+
+            if (gameManager == null)
+            {
+                gameManager = FindFirstObjectByType<GameManager>();
+            }
+            if (gameManager)
+            {
+                gameManager.SetPreviousColorRpc();
+            }
+        }
     }
 
 
