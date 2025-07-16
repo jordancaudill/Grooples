@@ -50,16 +50,20 @@ public class PlayerMovement : NetworkBehaviour
     private int playersLayerNumber = 7;
 
 
-    public override void OnStartClient()
+    public void Start()
     {
 
+        playerInputManager = GameObject.Find("PlayerInputManager").GetComponent<PlayerInputManager>();
+        spawnPoint = GameObject.Find("Spawn").transform;
+        transform.position = spawnPoint.position;
+    }
+
+    public override void OnStartClient()
+    {
         if (IsOwner)
         {
             playerInput.enabled = true;
         }
-        playerInputManager = GameObject.Find("PlayerInputManager").GetComponent<PlayerInputManager>();
-        spawnPoint = GameObject.Find("Spawn").transform;
-
     }
 
     private void Update()

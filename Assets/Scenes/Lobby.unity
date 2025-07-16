@@ -1681,6 +1681,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7443408887813606051, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 806349875}
+    - targetCorrespondingSourceObject: {fileID: 7443408887813606051, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 806349883}
   m_SourcePrefab: {fileID: 100100000, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
 --- !u!114 &550754280 stripped
 MonoBehaviour:
@@ -2283,6 +2286,22 @@ MonoBehaviour:
   _frameRate: 500
   _shareIds: 1
   _startOnHeadless: 1
+--- !u!114 &806349883
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 806349868}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15895a51081447d46bda466e7e830c08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _sceneProcessor: {fileID: 0}
+  _lightProbeUpdating: 0
+  _moveClientObjects: 1
+  _setActiveScene: 1
 --- !u!1 &878367098
 GameObject:
   m_ObjectHideFlags: 0
@@ -3784,8 +3803,8 @@ RectTransform:
   - {fileID: 673544981}
   - {fileID: 2133342918}
   - {fileID: 123160419}
-  - {fileID: 536228501}
   - {fileID: 1238357211}
+  - {fileID: 536228501}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3911,6 +3930,7 @@ MonoBehaviour:
   gamepadIcons: {fileID: 524426525}
   _networkManager: {fileID: 550754280}
   playerInput: {fileID: 1419158500}
+  sceneManager: {fileID: 806349883}
   isPaused: 0
 --- !u!4 &1419158498
 Transform:

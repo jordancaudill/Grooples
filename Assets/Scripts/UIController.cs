@@ -1,15 +1,11 @@
-using FishNet;
 using FishNet.Managing;
-using FishNet.Managing.Timing;
+using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Transporting;
-using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class UIController : MonoBehaviour
 {
@@ -20,6 +16,7 @@ public class UIController : MonoBehaviour
     public GameObject playButton;
     public GameObject connectedButtons;
     public GameObject unconnectedButtons;
+    public NetworkObject playerPrefab;
     public NetworkObject lobbyPlayerPrefab;
     public GameObject lobbyPlayerGrid;
     public NetworkObject gameManagerPrefab;
@@ -28,6 +25,7 @@ public class UIController : MonoBehaviour
     public GameObject gamepadIcons;
     public NetworkManager _networkManager;
     public PlayerInput playerInput;
+    public FishNet.Managing.Scened.SceneManager sceneManager;
 
     InputAction pauseAction;
     private string ipInput;
@@ -40,6 +38,7 @@ public class UIController : MonoBehaviour
         _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
         _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
 
+        sceneManager = FindFirstObjectByType<FishNet.Managing.Scened.SceneManager>();
         pauseAction = InputSystem.actions.FindAction("Pause");
     }
 
@@ -109,7 +108,23 @@ public class UIController : MonoBehaviour
     public void LoadScene(string sceneName)
     {
         Time.timeScale = 1f;
-        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+        SceneLoadData sld = new SceneLoadData(sceneName);
+        sld.ReplaceScenes = ReplaceOption.All;
+        sceneManager.LoadGlobalScenes(sld);
+    }
+    
+    public void QuitToLobby()
+    {
+        if (_networkManager.ServerManager.IsAnyServerStarted())
+        {
+            LoadScene("Lobby");
+        }
+        else
+        {
+            LeaveParty();
+            // Load scene locally
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
+        }
     }
 
     public void ResumeGame()
@@ -165,7 +180,6 @@ public class UIController : MonoBehaviour
 
     public void ClientManager_OnClientConnectionState(ClientConnectionStateArgs obj)
     {
-        print("ClientManager_OnClientConnectionState");
         if (connectedButtons && unconnectedButtons)
         {
             if (obj.ConnectionState == LocalConnectionState.Started)
@@ -184,14 +198,12 @@ public class UIController : MonoBehaviour
 
     public void ServerManager_OnServerConnectionState(ServerConnectionStateArgs obj)
     {
-        print("ServerManager_OnServerConnectionState");
         if (obj.ConnectionState == LocalConnectionState.Started)
         {
-            print("spawning game manager");
             NetworkObject gameManager = Instantiate(gameManagerPrefab);
+            gameManager.name = "GameManager";
             _networkManager.ServerManager.Spawn(gameManager);
-            //// Add host player to gameManager._players
-            //gameManager.GetComponent<GameManager>().AddPlayer(0);
+
             if (playButton)
             {
                 playButton.GetComponent<Button>().interactable = obj.ConnectionState == LocalConnectionState.Started;
@@ -232,7 +244,6 @@ public class UIController : MonoBehaviour
             }
         }
     }
-
 
     public void ExitGame()
     {

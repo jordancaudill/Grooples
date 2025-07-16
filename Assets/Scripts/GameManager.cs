@@ -1,5 +1,6 @@
 using FishNet.Connection;
 using FishNet.Managing;
+using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
@@ -14,25 +15,38 @@ public class Player
 public class GameManager : NetworkBehaviour
 {
 
-
     public readonly SyncList<Player> _players = new SyncList<Player>();
-    public NetworkManager _networkManager;
-
+    private NetworkManager _networkManager;
+    public NetworkObject playerPrefab;
+    private SceneManager sceneManager;
 
     void Start()
     {
         _networkManager = FindFirstObjectByType<NetworkManager>();
-
         _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
+
+        sceneManager = FindFirstObjectByType<SceneManager>();
+        sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
+
 
     }
 
     private void OnDestroy()
     {
         _networkManager.ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
+        sceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
 
     }
 
+    public void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)
+    {
+        // Spawn player prefab when the scene is set
+        if (args.LoadedScenes.Length > 0)
+        {
+            SpawnPlayerPrefabs();
+        }
+
+    }
 
     public void ServerManager_OnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs state)
     {
@@ -47,7 +61,22 @@ public class GameManager : NetworkBehaviour
     }
 
 
+    [Server]
+    public void SpawnPlayerPrefabs()
+    {
+        print("SpawnPlayerPrefabs");
+        // Spawn player prefab for each player
+        foreach (Player player in _players)
+        {
+            NetworkObject playerObject = Instantiate(playerPrefab);
+            //playerObject.GetComponent<PlayerMovement>().clientId = player.clientId; // Set clientId on the player object
+            //playerObject.GetComponent<PlayerMovement>().color = player.color; // Set color on the player object
+            // Get the client connection for the player
+            NetworkConnection conn = _networkManager.ServerManager.Clients.First(c => c.Key == player.clientId).Value;
 
+            _networkManager.ServerManager.Spawn(playerObject, conn);
+        }
+    }
 
 
     [Server]

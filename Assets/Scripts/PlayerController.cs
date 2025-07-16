@@ -1,36 +1,33 @@
-using FishNet.Managing.Object;
+using FishNet.Managing.Scened;
 using FishNet.Managing.Timing;
 using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using GameKit.Dependencies.Utilities;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.UIElements;
 
 public class PlayerController : NetworkBehaviour
 {
 
     public readonly SyncVar<int> playerNumber = new SyncVar<int>();
 
-    private PlayerMovement playerMovement;
+    public PlayerMovement playerMovement;
     public Rigidbody2D rb;
     public Tongue tongue;
     public SpringJoint2D springJoint2D;
     private GameObject localGrappleObject;
-    GameManager gameManager;
     private bool localPopup = false;
     private bool localStartGrapple = false;
     private bool localStopGrapple = false;
+    private GameManager gameManager;
+    private SceneManager sceneManager;
 
-    private void OnPlayerNumberChanged(int previous, int next, bool asServer)
-    {
-        SetPlayerColor();
-    }
-
+    //private void OnPlayerNumberChanged(int previous, int next, bool asServer)
+    //{
+    //SetPlayerColor();
+    //}
 
     public PredictionRigidbody2D PredictionRigidbody;
 
@@ -108,12 +105,34 @@ public class PlayerController : NetworkBehaviour
     {
         PredictionRigidbody = ObjectCaches<PredictionRigidbody2D>.Retrieve();
         PredictionRigidbody.Initialize(GetComponent<Rigidbody2D>());
-        playerNumber.OnChange += OnPlayerNumberChanged;
+        //playerNumber.OnChange += OnPlayerNumberChanged;
 
     }
+
+    private void Start()
+    {
+        gameManager = FindFirstObjectByType<GameManager>();
+        sceneManager = FindFirstObjectByType<SceneManager>();
+        sceneManager.OnLoadStart += SceneManager_OnLoadStart;
+
+        SetPlayerColor();
+
+    }
+
+
+    private void SceneManager_OnLoadStart(SceneLoadStartEventArgs args )
+    {
+        if (IsServerInitialized && args.QueueData.SceneLoadData.SceneLookupDatas[0].Name == "Lobby")
+        {
+            Despawn();
+        }
+    }
+
     private void OnDestroy()
     {
         ObjectCaches<PredictionRigidbody2D>.StoreAndDefault(ref PredictionRigidbody);
+        sceneManager.OnLoadStart -= SceneManager_OnLoadStart;
+
     }
     public override void OnStartNetwork()
     {
@@ -326,63 +345,81 @@ public class PlayerController : NetworkBehaviour
     }
 
 
-    public override void OnStartClient()
-    {
+    //public override void OnStartClient()
+    //{
 
-        if (IsOwner)
-        {
-            GetComponent<PlayerInput>().enabled = true;
-            AddPlayer();
-        }
-        playerMovement = GetComponent<PlayerMovement>();
+    //    if (IsOwner)
+    //    {
+    //        GetComponent<PlayerInput>().enabled = true;
+    //        AddPlayer();
+    //    }
+    //    playerMovement = GetComponent<PlayerMovement>();
 
-    }
+    //}
 
-    public override void OnStartServer()
-    {
-        // Initialize the playerNumber on the server
-        playerNumber.Value = 0;
-        SetPlayerColor();
-    }
+    //public override void OnStartServer()
+    //{
+    // Initialize the playerNumber on the server
+    //playerNumber.Value = 0;
+    //SetPlayerColor();
+    //}
 
-    private void Start()
-    {
-        if (IsServerStarted)
-        {
-            gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
-
-        }
-    }
-
-    [ServerRpc]
-    private void AddPlayer()
-    {
-        playerNumber.Value = ServerManager.Clients.Count - 1;
-        name = "Player_" + playerNumber.Value;
-
-    }
+  
 
     private void SetPlayerColor()
     {
-        //string playerColor = PlayerColors.playerColors[playerNumber.Value];
-        //ColorUtility.TryParseHtmlString(playerColor, out Color newPlayerColor);
-        //GameObject graphicObject = transform.Find("GraphicalObject").gameObject;
-        //graphicObject.GetComponent<SpriteRenderer>().color = newPlayerColor;
 
-        //string tongueColor = PlayerColors.tongueColors[playerNumber.Value];
-        //ColorUtility.TryParseHtmlString(tongueColor, out Color newTongueColor);
+        ColorUtility.TryParseHtmlString(PlayerColors.playerColors[gameManager.GetPlayerColor(OwnerId)], out Color playerColor);
+        GameObject graphicObject = transform.Find("GraphicalObject").gameObject;
+        graphicObject.GetComponent<SpriteRenderer>().color = playerColor;
 
-        //tongue.gameObject.GetComponent<LineRenderer>().colorGradient = new Gradient
-        //{
-        //    colorKeys = new GradientColorKey[]
-        //    {
-        //        new GradientColorKey(newTongueColor, 1f)
-        //    },
-        //    alphaKeys = new GradientAlphaKey[]
-        //    {
-        //        new GradientAlphaKey(1f, 1f)
-        //    }
-        //};
+        ColorUtility.TryParseHtmlString(PlayerColors.tongueColors[gameManager.GetPlayerColor(OwnerId)], out Color tongueColor);
+
+        tongue.gameObject.GetComponent<LineRenderer>().colorGradient = new Gradient
+        {
+            colorKeys = new GradientColorKey[]
+            {
+                new GradientColorKey(tongueColor, 1f)
+            },
+            alphaKeys = new GradientAlphaKey[]
+            {
+                new GradientAlphaKey(1f, 1f)
+            }
+        };
 
     }
+
+
+
+    //[ServerRpc]
+    //private void AddPlayer()
+    //{
+    //    playerNumber.Value = ServerManager.Clients.Count - 1;
+    //    name = "Player_" + playerNumber.Value;
+
+    //}
+
+    //private void SetPlayerColor()
+    //{
+    //string playerColor = PlayerColors.playerColors[playerNumber.Value];
+    //ColorUtility.TryParseHtmlString(playerColor, out Color newPlayerColor);
+    //GameObject graphicObject = transform.Find("GraphicalObject").gameObject;
+    //graphicObject.GetComponent<SpriteRenderer>().color = newPlayerColor;
+
+    //string tongueColor = PlayerColors.tongueColors[playerNumber.Value];
+    //ColorUtility.TryParseHtmlString(tongueColor, out Color newTongueColor);
+
+    //tongue.gameObject.GetComponent<LineRenderer>().colorGradient = new Gradient
+    //{
+    //    colorKeys = new GradientColorKey[]
+    //    {
+    //        new GradientColorKey(newTongueColor, 1f)
+    //    },
+    //    alphaKeys = new GradientAlphaKey[]
+    //    {
+    //        new GradientAlphaKey(1f, 1f)
+    //    }
+    //};
+
+    //}
 }

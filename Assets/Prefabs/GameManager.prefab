@@ -49,6 +49,8 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 6792337606350198594}
   _networkObjectCache: {fileID: 6792337606350198594}
   _networkManager: {fileID: 0}
+  playerPrefab: {fileID: 9166242095118903001, guid: e86ba4846ad1fc24a8f04b5c26e57d25, type: 3}
+  sceneManager: {fileID: 0}
 --- !u!114 &6792337606350198594
 MonoBehaviour:
   m_ObjectHideFlags: 0
