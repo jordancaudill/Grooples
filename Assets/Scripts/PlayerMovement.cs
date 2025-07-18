@@ -89,6 +89,10 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (CheckOutOfBounds())
         {
+            if(spawnPoint == null)
+            {
+                spawnPoint = GameObject.Find("Spawn").transform;
+            }
             // If player is out of bounds, teleport them to the spawn point
             teleport = spawnPoint.position;
         }
