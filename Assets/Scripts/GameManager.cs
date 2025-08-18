@@ -27,7 +27,6 @@ public class GameManager : NetworkBehaviour
     {
         _networkManager = FindFirstObjectByType<NetworkManager>();
         _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
-
         sceneManager = FindFirstObjectByType<SceneManager>();
         sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
 
@@ -75,7 +74,6 @@ public class GameManager : NetworkBehaviour
     [Server]
     public void SpawnPlayerPrefabs()
     {
-        print("SpawnPlayerPrefabs");
         // Spawn player prefab for each player
         foreach (Player player in _players)
         {
@@ -92,7 +90,6 @@ public class GameManager : NetworkBehaviour
     [Server]
     public void SpawnPlayerLobbyPrefabs()
     {
-        print("SpawnPlayerPrefabs");
         // Spawn player prefab for each player
         foreach (Player player in _players)
         {

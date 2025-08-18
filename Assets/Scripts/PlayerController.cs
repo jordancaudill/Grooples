@@ -5,7 +5,9 @@ using FishNet.Object.Prediction;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using GameKit.Dependencies.Utilities;
+using System.Collections;
 using System.Collections.Generic;
+using Unity.Cinemachine;
 using UnityEngine;
 
 public class PlayerController : NetworkBehaviour
@@ -23,6 +25,7 @@ public class PlayerController : NetworkBehaviour
     private bool localStopGrapple = false;
     private GameManager gameManager;
     private SceneManager sceneManager;
+    private CinemachineTargetGroup cinemachineTargetGroup;
 
     //private void OnPlayerNumberChanged(int previous, int next, bool asServer)
     //{
@@ -345,26 +348,24 @@ public class PlayerController : NetworkBehaviour
     }
 
 
-    //public override void OnStartClient()
-    //{
+    public override void OnStartClient()
+    {
 
-    //    if (IsOwner)
-    //    {
-    //        GetComponent<PlayerInput>().enabled = true;
-    //        AddPlayer();
-    //    }
-    //    playerMovement = GetComponent<PlayerMovement>();
+        StartCoroutine(WaitForCinemachineTargetGroup());
 
-    //}
+    }
 
-    //public override void OnStartServer()
-    //{
-    // Initialize the playerNumber on the server
-    //playerNumber.Value = 0;
-    //SetPlayerColor();
-    //}
+    IEnumerator WaitForCinemachineTargetGroup()
+    {
+        while (FindFirstObjectByType<CinemachineTargetGroup>() == null)
+            yield return null;
 
-  
+        cinemachineTargetGroup = FindFirstObjectByType<CinemachineTargetGroup>();
+        cinemachineTargetGroup.AddMember(transform, 1f, 1f); // Add player to Cinemachine Target Group
+
+    }
+
+
 
     private void SetPlayerColor()
     {
