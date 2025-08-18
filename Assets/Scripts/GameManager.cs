@@ -18,6 +18,9 @@ public class GameManager : NetworkBehaviour
     public readonly SyncList<Player> _players = new SyncList<Player>();
     private NetworkManager _networkManager;
     public NetworkObject playerPrefab;
+    public NetworkObject playerLobbyPrefab;
+    public int currentLevel = 1;
+
     private SceneManager sceneManager;
 
     void Start()
@@ -43,7 +46,15 @@ public class GameManager : NetworkBehaviour
         // Spawn player prefab when the scene is set
         if (args.LoadedScenes.Length > 0)
         {
-            SpawnPlayerPrefabs();
+            if (args.LoadedScenes[0].name == "Lobby")
+            {
+                SpawnPlayerLobbyPrefabs();
+            }
+            else
+            {
+                SpawnPlayerPrefabs();
+
+            }
         }
 
     }
@@ -77,6 +88,25 @@ public class GameManager : NetworkBehaviour
             _networkManager.ServerManager.Spawn(playerObject, conn);
         }
     }
+
+    [Server]
+    public void SpawnPlayerLobbyPrefabs()
+    {
+        print("SpawnPlayerPrefabs");
+        // Spawn player prefab for each player
+        foreach (Player player in _players)
+        {
+            NetworkObject playerObject = Instantiate(playerLobbyPrefab);
+            //playerObject.GetComponent<PlayerMovement>().clientId = player.clientId; // Set clientId on the player object
+            //playerObject.GetComponent<PlayerMovement>().color = player.color; // Set color on the player object
+            // Get the client connection for the player
+            NetworkConnection conn = _networkManager.ServerManager.Clients.First(c => c.Key == player.clientId).Value;
+
+            _networkManager.ServerManager.Spawn(playerObject, conn);
+        }
+    }
+
+
 
 
     [Server]

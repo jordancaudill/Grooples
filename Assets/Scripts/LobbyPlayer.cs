@@ -15,18 +15,6 @@ public class LobbyPlayer : NetworkBehaviour
 
     public override void OnStartClient()
     {
-        lobbyPlayerGrid = GameObject.Find("PlayerGrid");
-        transform.SetParent(lobbyPlayerGrid.transform, false);
-        transform.localScale = Vector3.one;
-        if (IsOwner)
-        {
-            playerName.text = "Me";
-        }
-        else
-        {
-            playerName.text = "";
-        }
-        print("OnStartClient");
         StartCoroutine(WaitForGameManager());
     }
 
@@ -43,6 +31,21 @@ public class LobbyPlayer : NetworkBehaviour
 
         gameManager = FindFirstObjectByType<GameManager>();
         gameManager._players.OnChange += OnPlayersChange;
+        lobbyPlayerGrid = GameObject.Find("PlayerGrid");
+        if (lobbyPlayerGrid != null)
+        {
+            transform.SetParent(lobbyPlayerGrid.transform, false);
+        }
+        transform.localScale = Vector3.one;
+        if (IsOwner)
+        {
+            playerName.text = "Me";
+        }
+        else
+        {
+            playerName.text = "";
+        }
+
         SetInitialColor();
     }
 

@@ -1,0 +1,11 @@
+{
+    "asset": "15eda0461e39b1544a8d334eefd7d8d7",
+    "fileName": "0198ba38-d09d-7f21-87b0-64fe353fc933.pose.json",
+    "prompt": "character does the floss dance",
+    "negativePrompt": "",
+    "model": "a9c27ca4-3ec9-43e8-96cd-ee891aba64c5",
+    "modelName": "Text to Motion",
+    "customSeed": 1691978206,
+    "w3CTraceId": "563d8d0d1658187505518028473fcfeb",
+    "isTrimmed": false
+}

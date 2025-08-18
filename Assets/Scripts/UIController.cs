@@ -16,6 +16,7 @@ public class UIController : MonoBehaviour
     public GameObject playButton;
     public GameObject connectedButtons;
     public GameObject unconnectedButtons;
+    public GameObject successScreen;
     public NetworkObject playerPrefab;
     public NetworkObject lobbyPlayerPrefab;
     public GameObject lobbyPlayerGrid;
@@ -40,6 +41,34 @@ public class UIController : MonoBehaviour
 
         sceneManager = FindFirstObjectByType<FishNet.Managing.Scened.SceneManager>();
         pauseAction = InputSystem.actions.FindAction("Pause");
+        sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
+
+    }
+
+    public void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)
+    {
+
+        if (connectedButtons != null && unconnectedButtons != null)
+        {
+            if (_networkManager.ClientManager.Connection.IsValid)
+            {
+                unconnectedButtons.SetActive(false);
+                connectedButtons.SetActive(true);
+                if (_networkManager.IsServerStarted)
+                {
+                    playButton.GetComponent<Button>().interactable = true;
+                }
+
+            }
+            else
+            {
+                unconnectedButtons.SetActive(true);
+                connectedButtons.SetActive(false);
+            }
+
+        }
+
+
     }
 
 
@@ -51,6 +80,7 @@ public class UIController : MonoBehaviour
 
         _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
         _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
+        sceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
 
     }
 
@@ -112,7 +142,7 @@ public class UIController : MonoBehaviour
         sld.ReplaceScenes = ReplaceOption.All;
         sceneManager.LoadGlobalScenes(sld);
     }
-    
+
     public void QuitToLobby()
     {
         if (_networkManager.ServerManager.IsAnyServerStarted())
@@ -124,6 +154,32 @@ public class UIController : MonoBehaviour
             LeaveParty();
             // Load scene locally
             UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
+        }
+    }
+
+    public void LoadNextLevel()
+    {
+        if (gameManager == null)
+        {
+            gameManager = FindFirstObjectByType<GameManager>();
+        }
+
+        if (gameManager.currentLevel >= 5) // Assuming 5 is the last level
+        {
+            LoadScene("Lobby");
+        } else
+        {
+            gameManager.currentLevel++;
+            LoadScene("Level" + gameManager.currentLevel.ToString());
+            successScreen.SetActive(false);
+        }
+    }
+
+    public void ShowSuccessScreen()
+    {
+        if (successScreen != null)
+        {
+            successScreen.SetActive(true);
         }
     }
 

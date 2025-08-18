@@ -37,7 +37,6 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] public Collider2D[] playerColliders;
 
     public PlayerInput playerInput;
-    public PlayerInputManager playerInputManager;
     [SerializeField] public float popupForce = 3f;
     private float lastGrappleTime = -10f;
     [SerializeField] private float grappleCooldown = 0.25f;
@@ -53,7 +52,6 @@ public class PlayerMovement : NetworkBehaviour
     public void Start()
     {
 
-        playerInputManager = GameObject.Find("PlayerInputManager").GetComponent<PlayerInputManager>();
         spawnPoint = GameObject.Find("Spawn").transform;
         transform.position = spawnPoint.position;
     }
