@@ -1,0 +1,13 @@
+{
+    "asset": "60ba1ae5444675f4fb050f1e9f1974eb",
+    "fileName": "0198bf3a-ee61-7854-8413-34b2aba74d50.wav",
+    "prompt": "zipper",
+    "negativePrompt": "",
+    "model": "0ee39b33-2893-4e0f-8c46-0e0bdd4eda85",
+    "modelName": "Text to Sound",
+    "customSeed": -1,
+    "w3CTraceId": "cc01fc5d3e665de32e02715abee5dfda",
+    "duration": 1.0,
+    "autoTrim": true,
+    "hasReference": false
+}

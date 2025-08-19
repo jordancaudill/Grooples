@@ -1,0 +1,13 @@
+{
+    "asset": "0f7934e6216eb7346a9c8eb411dcb9a3",
+    "fileName": "0198c04f-0233-7c01-a9c7-5b367553701d.wav",
+    "prompt": "wine bottle popping open",
+    "negativePrompt": "",
+    "model": "0ee39b33-2893-4e0f-8c46-0e0bdd4eda85",
+    "modelName": "Text to Sound",
+    "customSeed": -1,
+    "w3CTraceId": "19d9fe25c0dfd0d776e308807df9d613",
+    "duration": 1.0,
+    "autoTrim": true,
+    "hasReference": false
+}

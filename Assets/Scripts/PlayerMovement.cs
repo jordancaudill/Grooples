@@ -15,6 +15,11 @@ public class PlayerMovement : NetworkBehaviour
     private Transform spawnPoint;
     public LayerMask hitLayers;
 
+    public AudioSource audioSource;
+    public AudioClip whooshSound;
+    public AudioClip popSound;
+    public AudioClip squelchSound;
+
     public Rigidbody2D rb;
 
     public Vector2 moveInput;
@@ -87,7 +92,7 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (CheckOutOfBounds())
         {
-            if(spawnPoint == null)
+            if (spawnPoint == null)
             {
                 spawnPoint = GameObject.Find("Spawn").transform;
             }
@@ -181,6 +186,7 @@ public class PlayerMovement : NetworkBehaviour
             ToggleColliders(false);
             RaycastHit2D _hit = Physics2D.Raycast(tongue.transform.position, aimDirection, maxDistance, hitLayers);
             ToggleColliders(true);
+            ServerRpcPlaySoundEffect("whoosh");
             if (_hit.transform != null)
             {
                 OnGrappleHit(_hit);
@@ -205,14 +211,64 @@ public class PlayerMovement : NetworkBehaviour
 
     }
 
+    [ServerRpc(RunLocally = true)]
+    public void ServerRpcPlaySoundEffect(string clip)
+
+    {
+        if (IsOwner)
+        {
+            PlaySoundEffect(clip);
+        }
+        ObserversRpcPlaySoundEffect(clip);
+    }
+
+    [ObserversRpc]
+    public void ObserversRpcPlaySoundEffect(string clip)
+
+    {
+        if (IsOwner)
+            return; // Don't play sound on the owner to avoid double sound effects
+        PlaySoundEffect(clip);
+    }
+
+
+    public void PlaySoundEffect(string clip)
+    {
+        // Randomize the pitch slightly for variation
+        audioSource.pitch = Random.Range(0.5f, 1.5f);
+
+        AudioClip clipToPlay = null;
+
+        if (clip == "squelch")
+        {
+            clipToPlay = squelchSound;
+        }
+        else if (clip == "pop")
+        {
+            clipToPlay = popSound;
+        }
+        else if (clip == "whoosh")
+        {
+            clipToPlay = whooshSound;
+        }
+        else
+        {
+            return; // Invalid clip name, do nothing
+        }
+        audioSource.PlayOneShot(clipToPlay);
+    }
+
     void OnGrappleHit(RaycastHit2D _hit)
     {
         int hitLayer = _hit.transform.gameObject.layer;
         tongue.ResetTongueWaves();
         float distance = Vector2.Distance(_hit.point, tongue.transform.position);
+
+
         if (_hit.transform.gameObject.layer == terrainLayerNumber && distance <= minPopupDistance)
         {
             // If the distance is less than the minimum, popup the player
+            ServerRpcPlaySoundEffect("pop");
             popup = true;
             lastGrapplePoint = _hit.point;
             tongue.SetTongueTargetHit();
@@ -223,6 +279,7 @@ public class PlayerMovement : NetworkBehaviour
 
             // Grapple to terrain or player
             // Get the local position of the hit point on the hit object, so if the object moves, the grapple point will still be correct
+            ServerRpcPlaySoundEffect("squelch");
             grappleOffset = _hit.transform.InverseTransformPoint(_hit.point);
             grappleObject = _hit.transform.gameObject;
             lastGrapplePoint = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
@@ -236,7 +293,6 @@ public class PlayerMovement : NetworkBehaviour
     {
         lastGrapplePoint = (Vector2)tongue.transform.position + (aimDirection * maxDistance);
         tongue.SetTongueTargetMiss();
-
     }
 
     bool CheckOutOfBounds()

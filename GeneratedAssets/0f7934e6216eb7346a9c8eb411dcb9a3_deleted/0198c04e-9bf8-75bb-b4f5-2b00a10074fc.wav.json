@@ -1,0 +1,13 @@
+{
+    "asset": "0f7934e6216eb7346a9c8eb411dcb9a3",
+    "fileName": "0198c04e-9bf8-75bb-b4f5-2b00a10074fc.wav",
+    "prompt": "champagne bottle pop",
+    "negativePrompt": "",
+    "model": "0ee39b33-2893-4e0f-8c46-0e0bdd4eda85",
+    "modelName": "Text to Sound",
+    "customSeed": -1,
+    "w3CTraceId": "116ab290452188e1e149c35dd24a037a",
+    "duration": 1.0,
+    "autoTrim": true,
+    "hasReference": false
+}

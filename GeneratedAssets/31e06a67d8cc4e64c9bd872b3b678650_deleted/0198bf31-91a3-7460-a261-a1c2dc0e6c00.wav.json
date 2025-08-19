@@ -1,0 +1,13 @@
+{
+    "asset": "31e06a67d8cc4e64c9bd872b3b678650",
+    "fileName": "0198bf31-91a3-7460-a261-a1c2dc0e6c00.wav",
+    "prompt": "A wet tongue smooching sound, like a frog sticking out it's tongue to catch an insect.",
+    "negativePrompt": "",
+    "model": "0ee39b33-2893-4e0f-8c46-0e0bdd4eda85",
+    "modelName": "Text to Sound",
+    "customSeed": -1,
+    "w3CTraceId": "c907a714a34fbaa5ecb75e4be1869c8e",
+    "duration": 10.0,
+    "autoTrim": false,
+    "hasReference": false
+}

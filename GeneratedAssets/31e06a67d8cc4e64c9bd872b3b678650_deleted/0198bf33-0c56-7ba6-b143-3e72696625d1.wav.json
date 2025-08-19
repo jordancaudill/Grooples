@@ -1,0 +1,13 @@
+{
+    "asset": "31e06a67d8cc4e64c9bd872b3b678650",
+    "fileName": "0198bf33-0c56-7ba6-b143-3e72696625d1.wav",
+    "prompt": "a light whiz and woosh sound, like an arrow passing through the air",
+    "negativePrompt": "",
+    "model": "0ee39b33-2893-4e0f-8c46-0e0bdd4eda85",
+    "modelName": "Text to Sound",
+    "customSeed": -1,
+    "w3CTraceId": "1ff9c59285a5e56884a1aa08565ddeb1",
+    "duration": 1.0,
+    "autoTrim": true,
+    "hasReference": false
+}

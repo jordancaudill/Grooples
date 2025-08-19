@@ -1,0 +1,13 @@
+{
+    "asset": "31e06a67d8cc4e64c9bd872b3b678650",
+    "fileName": "0198bf32-17e6-7503-b799-d5ea57ffdc56.wav",
+    "prompt": " a frog sticking out it's tongue quickly to catch an insect.",
+    "negativePrompt": "",
+    "model": "0ee39b33-2893-4e0f-8c46-0e0bdd4eda85",
+    "modelName": "Text to Sound",
+    "customSeed": -1,
+    "w3CTraceId": "ef6e75e9aa647aa36576b379aa40acf2",
+    "duration": 1.0,
+    "autoTrim": true,
+    "hasReference": false
+}

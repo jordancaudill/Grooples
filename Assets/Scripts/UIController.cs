@@ -27,6 +27,7 @@ public class UIController : MonoBehaviour
     public NetworkManager _networkManager;
     public PlayerInput playerInput;
     public FishNet.Managing.Scened.SceneManager sceneManager;
+    public int levelCount = 5; // Assuming there are 5 levels in the game
 
     InputAction pauseAction;
     private string ipInput;
@@ -164,7 +165,7 @@ public class UIController : MonoBehaviour
             gameManager = FindFirstObjectByType<GameManager>();
         }
 
-        if (gameManager.currentLevel >= 5) // Assuming 5 is the last level
+        if (gameManager.currentLevel >= levelCount) // Assuming 5 is the last level
         {
             LoadScene("Lobby");
         } else
