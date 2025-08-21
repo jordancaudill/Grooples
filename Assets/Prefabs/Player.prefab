@@ -1068,7 +1068,7 @@ MonoBehaviour:
   _componentIndexCache: 2
   _addedNetworkObject: {fileID: 9166242095118903001}
   _networkObjectCache: {fileID: 9166242095118903001}
-  moveSpeed: 5
+  moveSpeed: 10
   terrainLayer:
     serializedVersion: 2
     m_Bits: 8
