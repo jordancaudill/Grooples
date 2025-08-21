@@ -44,9 +44,9 @@ public class Finish : NetworkBehaviour
             foreach (GameObject p in playersInFinish)
             {
                 PlayerController pc = p.GetComponent<PlayerController>();
-                if (pc != null && pc.rb.linearVelocity.magnitude > 0.5f)
+                if (pc != null && pc.rb.linearVelocity.magnitude > 0.75f)
                 {
-                    return; // If any player is moving, do not proceed
+                    return; // If any player is moving too fast, do not proceed
                 }
             }
             isFinished = true;

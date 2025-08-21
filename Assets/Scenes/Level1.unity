@@ -509,7 +509,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 615284626}
   - {fileID: 1537358187}
   - {fileID: 678375595}
   - {fileID: 869126631}
@@ -529,7 +528,7 @@ GameObject:
   - component: {fileID: 615284630}
   - component: {fileID: 615284629}
   - component: {fileID: 615284628}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: Finish
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -545,12 +544,12 @@ Transform:
   m_GameObject: {fileID: 615284625}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 25.604431, y: -5.02286, z: 0}
+  m_LocalPosition: {x: 20.948322, y: -2.46367, z: 0}
   m_LocalScale: {x: 9.786884, y: 0.7993, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 849924556}
-  m_Father: {fileID: 604673707}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &615284628
 MonoBehaviour:
@@ -978,7 +977,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.20551796, g: 0.22742546, b: 0.4339623, a: 1}
+  m_Color: {r: 0.43137258, g: 0.43921572, b: 0.46274513, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -1382,7 +1381,7 @@ GameObject:
   - component: {fileID: 849924556}
   - component: {fileID: 849924558}
   - component: {fileID: 849924557}
-  m_Layer: 3
+  m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1839,7 +1838,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.20551796, g: 0.22742546, b: 0.4339623, a: 1}
+  m_Color: {r: 0.43137258, g: 0.43921572, b: 0.46274513, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -2094,6 +2093,14 @@ PrefabInstance:
       propertyPath: '_networkObjects.Array.data[2]'
       value: 
       objectReference: {fileID: 869126632}
+    - target: {fileID: 3500418057308066560, guid: bef7ce09db5c7f646882b87f9fc8e00f, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 78.1001
+      objectReference: {fileID: 0}
+    - target: {fileID: 3500418057308066560, guid: bef7ce09db5c7f646882b87f9fc8e00f, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -121.400024
+      objectReference: {fileID: 0}
     - target: {fileID: 4033747443167923090, guid: bef7ce09db5c7f646882b87f9fc8e00f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 6.017931
@@ -2168,6 +2175,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 647972532}
+  - {fileID: 615284626}
   - {fileID: 574639335}
   - {fileID: 604673707}
   - {fileID: 8723463304131127245}

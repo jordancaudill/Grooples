@@ -117,7 +117,7 @@ public class PlayerController : NetworkBehaviour
         gameManager = FindFirstObjectByType<GameManager>();
         sceneManager = FindFirstObjectByType<SceneManager>();
         sceneManager.OnLoadStart += SceneManager_OnLoadStart;
-
+        sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
         SetPlayerColor();
 
     }
@@ -131,10 +131,21 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
+    private void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)
+    {
+        if (args.LoadedScenes.Length > 0)
+        {
+            StartCoroutine(WaitForCinemachineTargetGroup());
+        }
+    }
+
+
     private void OnDestroy()
     {
         ObjectCaches<PredictionRigidbody2D>.StoreAndDefault(ref PredictionRigidbody);
         sceneManager.OnLoadStart -= SceneManager_OnLoadStart;
+        sceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
+
 
     }
     public override void OnStartNetwork()

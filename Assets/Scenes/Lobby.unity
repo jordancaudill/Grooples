@@ -3933,7 +3933,7 @@ MonoBehaviour:
   _networkManager: {fileID: 550754280}
   playerInput: {fileID: 1419158500}
   sceneManager: {fileID: 806349883}
-  levelCount: 1
+  levelCount: 5
   isPaused: 0
 --- !u!4 &1419158498
 Transform:
