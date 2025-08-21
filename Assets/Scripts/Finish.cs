@@ -1,3 +1,4 @@
+using FishNet.Managing;
 using FishNet.Object;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,12 +10,15 @@ public class Finish : NetworkBehaviour
     private HashSet<GameObject> playersInFinish = new HashSet<GameObject>();
     private UIController uiController;
     private bool isFinished = false;
-
+    private NetworkManager _networkManager;
     void Start()
     {
         uiController = FindFirstObjectByType<UIController>();
 
         gameManager = FindFirstObjectByType<GameManager>();
+
+        _networkManager = FindFirstObjectByType<NetworkManager>();
+
     }
 
     private void Update()
@@ -34,7 +38,7 @@ public class Finish : NetworkBehaviour
 
     private void CheckForFinish()
     {
-        if (!isFinished && playersInFinish.Count == gameManager._players.Count)
+        if (_networkManager.IsServerStarted && !isFinished && playersInFinish.Count == gameManager._players.Count)
         {
             // If all player inside the finish area and are not moving, show success screen
             foreach (GameObject p in playersInFinish)
@@ -46,7 +50,7 @@ public class Finish : NetworkBehaviour
                 }
             }
             isFinished = true;
-            uiController.ShowSuccessScreen();
+            ObserverRpcShowSuccessScreen();
             // Wait 5 seconds then load the next level
             StartCoroutine(LoadNextLevelAfterDelay(5f));
 
@@ -59,6 +63,13 @@ public class Finish : NetworkBehaviour
         yield return new WaitForSeconds(delay);
         // Load the next level
         uiController.LoadNextLevel();
+    }
+
+    [ObserversRpc(RunLocally = true)]
+    private void ObserverRpcShowSuccessScreen()
+    {
+        uiController.ShowSuccessScreen();
+
     }
 
     private void OnTriggerExit2D(Collider2D other)

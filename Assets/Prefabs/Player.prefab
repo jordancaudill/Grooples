@@ -1082,6 +1082,7 @@ MonoBehaviour:
   whooshSound: {fileID: 8300000, guid: 58567a20f4a4ac54ca25ab4d380bd1e4, type: 3}
   popSound: {fileID: 8300000, guid: d247c4b1fdd60e54e8d6fe4f8e2708c4, type: 3}
   squelchSound: {fileID: 8300000, guid: 0f619a033dc9d67449110b9ebf1b9cde, type: 3}
+  deathSound: {fileID: 8300000, guid: dc3bc5d311fd4fd46a526d1c2c05a3e4, type: 3}
   rb: {fileID: 5989748641023836935}
   moveInput: {x: 0, y: 0}
   aimDirection: {x: 0, y: 0}

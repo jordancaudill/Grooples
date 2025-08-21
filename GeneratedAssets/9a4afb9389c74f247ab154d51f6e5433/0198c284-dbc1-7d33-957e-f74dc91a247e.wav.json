@@ -1,0 +1,13 @@
+{
+    "asset": "9a4afb9389c74f247ab154d51f6e5433",
+    "fileName": "0198c284-dbc1-7d33-957e-f74dc91a247e.wav",
+    "prompt": "whoosh",
+    "negativePrompt": "",
+    "model": "0ee39b33-2893-4e0f-8c46-0e0bdd4eda85",
+    "modelName": "Text to Sound",
+    "customSeed": -1,
+    "w3CTraceId": "4f64a6b2239f5ee9be1151b2c6c50166",
+    "duration": 10.0,
+    "autoTrim": false,
+    "hasReference": false
+}

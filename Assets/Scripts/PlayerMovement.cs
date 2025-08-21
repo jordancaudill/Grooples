@@ -19,6 +19,7 @@ public class PlayerMovement : NetworkBehaviour
     public AudioClip whooshSound;
     public AudioClip popSound;
     public AudioClip squelchSound;
+    public AudioClip deathSound;
 
     public Rigidbody2D rb;
 
@@ -98,6 +99,7 @@ public class PlayerMovement : NetworkBehaviour
             }
             // If player is out of bounds, teleport them to the spawn point
             teleport = spawnPoint.position;
+            ServerRpcPlaySoundEffect("death");
         }
     }
 
@@ -250,6 +252,10 @@ public class PlayerMovement : NetworkBehaviour
         else if (clip == "whoosh")
         {
             clipToPlay = whooshSound;
+        }
+        else if (clip == "death")
+        {
+            clipToPlay = deathSound;
         }
         else
         {
