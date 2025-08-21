@@ -396,7 +396,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8947497731421286986
 Transform:
   m_ObjectHideFlags: 0
@@ -1068,7 +1068,7 @@ MonoBehaviour:
   _componentIndexCache: 2
   _addedNetworkObject: {fileID: 9166242095118903001}
   _networkObjectCache: {fileID: 9166242095118903001}
-  moveSpeed: 10
+  moveSpeed: 5
   terrainLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -1098,9 +1098,9 @@ MonoBehaviour:
   - {fileID: 701968169404931231}
   - {fileID: 1232718486844627212}
   playerInput: {fileID: 1531998262079415352}
-  popupForce: 10
+  popupForce: 15
   grappleCooldown: 0.25
-  maxDistance: 10
+  maxDistance: 9
   minDistance: 1
   launchSpeed: 1
   hangDistance: 2

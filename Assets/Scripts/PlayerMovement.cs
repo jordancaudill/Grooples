@@ -141,18 +141,20 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (playerInput.currentControlScheme != "Gamepad")
         {
-            // moves player on kbm
-            if (grappleObject != null)
-            {
-                moveInput = context.ReadValue<Vector2>();
-            }
-            else
-            {
-                moveInput = Vector2.zero;
+            // moves player on kbm\
 
-            }
+            // If the player is grappling, allow movement input to control the grappled object
+            //if (grappleObject != null)
+            //{
+            //    moveInput = context.ReadValue<Vector2>();
+            //}
+            //else
+            //{
+            //    moveInput = Vector2.zero;
 
-            //moveInput = context.ReadValue<Vector2>();
+            //}
+
+            moveInput = context.ReadValue<Vector2>();
 
         }
         else
