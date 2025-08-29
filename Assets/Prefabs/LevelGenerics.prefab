@@ -158,7 +158,7 @@ Transform:
   m_GameObject: {fileID: 1736872668361577940}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6.017931, y: 0.65127, z: -10}
+  m_LocalPosition: {x: 6.017931, y: 3.15127, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -569,7 +569,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineFollow
   TrackerSettings:
     BindingMode: 5
-    PositionDamping: {x: 1, y: 1, z: 1}
+    PositionDamping: {x: 1, y: 500, z: 1}
     AngularDampingMode: 0
     RotationDamping: {x: 1, y: 1, z: 1}
     QuaternionDamping: 1
@@ -586,15 +586,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4eb4843bae7d24943842ea23130dcd55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineGroupFraming
-  FramingMode: 2
-  FramingSize: 0.4
+  FramingMode: 0
+  FramingSize: 0.66
   CenterOffset: {x: -1, y: -0.25}
   Damping: 2
   SizeAdjustment: 2
   LateralAdjustment: 0
   FovRange: {x: 1, y: 100}
   DollyRange: {x: -100, y: 100}
-  OrthoSizeRange: {x: 10, y: 15}
+  OrthoSizeRange: {x: 10, y: 500}
 --- !u!1001 &2301526595422233756
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -610,6 +610,14 @@ PrefabInstance:
     - target: {fileID: 1312352244, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -52.69995
+      objectReference: {fileID: 0}
+    - target: {fileID: 3414662637742749596, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 78.1001
+      objectReference: {fileID: 0}
+    - target: {fileID: 3414662637742749596, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -121.400024
       objectReference: {fileID: 0}
     - target: {fileID: 7443408887813606049, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       propertyPath: m_LocalPosition.x
