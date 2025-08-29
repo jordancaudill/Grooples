@@ -7,10 +7,16 @@ using UnityEngine;
 public class Finish : NetworkBehaviour
 {
     private GameManager gameManager;
-    private HashSet<GameObject> playersInFinish = new HashSet<GameObject>();
+    private HashSet<PlayerController> playersInFinish = new HashSet<PlayerController>();
     private UIController uiController;
     private bool isFinished = false;
+    public GameObject platform;
     private NetworkManager _networkManager;
+    private float timeOnPlatform = 0f;
+    public Color startColor;
+    public Color endColor;
+    private float timeToWin = 3f; // Time required on platform to win
+
     void Start()
     {
         uiController = FindFirstObjectByType<UIController>();
@@ -21,8 +27,10 @@ public class Finish : NetworkBehaviour
 
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
+        CheckForPlayersOnPlatform();
+        UpdatePlatformColor();
         CheckForFinish();
     }
 
@@ -32,28 +40,51 @@ public class Finish : NetworkBehaviour
         PlayerController player = other.GetComponent<PlayerController>();
         if (player != null)
         {
-            playersInFinish.Add(player.gameObject);
+            playersInFinish.Add(player);
+
         }
+    }
+
+    private void UpdatePlatformColor()
+    {
+        // Update platform color gradient based on timeOnPlatform
+        float t = Mathf.Clamp01(timeOnPlatform / timeToWin);
+        Color currentColor = Color.Lerp(startColor, endColor, t);
+        platform.GetComponent<SpriteRenderer>().color = currentColor;
+    }
+
+    private void CheckForPlayersOnPlatform()
+    {
+        if (playersInFinish.Count == gameManager._players.Count)
+        {
+            timeOnPlatform += Time.fixedDeltaTime;
+        }
+        else
+        {
+            timeOnPlatform = 0f; // Reset timer if no players are on the platform
+        }
+    }
+
+    private int GetClientIdFromPlayerController(PlayerController pc)
+    {
+        // Assuming PlayerController has a reference to its NetworkObject
+        if (pc != null && pc.IsOwner)
+        {
+            int clientId = pc.Owner.ClientId;
+            return clientId;
+        }
+        return -1; // Return -1 if not found or not owner
     }
 
     private void CheckForFinish()
     {
-        if (_networkManager.IsServerStarted && !isFinished && playersInFinish.Count == gameManager._players.Count)
+        // Check for final finish condition
+        if (_networkManager.IsServerStarted && !isFinished && playersInFinish.Count == gameManager._players.Count && timeOnPlatform >= timeToWin)
         {
-            // If all player inside the finish area and are not moving, show success screen
-            foreach (GameObject p in playersInFinish)
-            {
-                PlayerController pc = p.GetComponent<PlayerController>();
-                if (pc != null && pc.rb.linearVelocity.magnitude > 0.75f)
-                {
-                    return; // If any player is moving too fast, do not proceed
-                }
-            }
             isFinished = true;
             ObserverRpcShowSuccessScreen();
             // Wait 5 seconds then load the next level
             StartCoroutine(LoadNextLevelAfterDelay(5f));
-
 
         }
     }
@@ -77,7 +108,7 @@ public class Finish : NetworkBehaviour
         PlayerController player = other.GetComponent<PlayerController>();
         if (player != null)
         {
-            playersInFinish.Remove(player.gameObject);
+            playersInFinish.Remove(player);
         }
     }
 

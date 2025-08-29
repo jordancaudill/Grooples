@@ -1,5 +1,6 @@
 using FishNet.Managing;
 using FishNet.Object;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -71,8 +72,20 @@ public class PlayerMovement : NetworkBehaviour
         if (IsOwner)
         {
             playerInput.enabled = true;
+            StartCoroutine(WaitForUIController());
+
         }
     }
+
+    IEnumerator WaitForUIController()
+    {
+        while (FindFirstObjectByType<UIController>() == null)
+            yield return null;
+
+        uiController = FindFirstObjectByType<UIController>();
+
+    }
+
 
     private void Update()
     {
@@ -382,4 +395,6 @@ public class PlayerMovement : NetworkBehaviour
         }
         return current;
     }
+
+
 }
