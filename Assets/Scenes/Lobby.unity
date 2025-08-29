@@ -1595,6 +1595,10 @@ PrefabInstance:
       propertyPath: _reuseAddress
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2240173048763132163, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
+      propertyPath: _latencySimulator._enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4393252310584637057, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       propertyPath: m_IsActive
       value: 0

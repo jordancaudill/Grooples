@@ -47,6 +47,12 @@ public class Tongue : NetworkBehaviour
         tongueTarget = (Vector2)transform.position + (playerMovement.aimDirection * defaultTongueLength);
     }
 
+    public void SetTongueTargetNone()
+    {
+        tongueTarget = (Vector2)transform.position;
+    }
+
+
     public void SetTongueTargetHit()
     {
         if (playerMovement.grappleObject == null || playerMovement.grappleOffset == null)

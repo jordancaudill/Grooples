@@ -1,3 +1,4 @@
+using FishNet.Managing;
 using FishNet.Object;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -23,6 +24,7 @@ public class PlayerMovement : NetworkBehaviour
 
     public Rigidbody2D rb;
 
+    private UIController uiController;
     public Vector2 moveInput;
     public Vector2 aimDirection;
     public Vector2 teleport;
@@ -60,6 +62,8 @@ public class PlayerMovement : NetworkBehaviour
 
         spawnPoint = GameObject.Find("Spawn").transform;
         transform.position = spawnPoint.position;
+        uiController = FindFirstObjectByType<UIController>();
+
     }
 
     public override void OnStartClient()
@@ -72,14 +76,19 @@ public class PlayerMovement : NetworkBehaviour
 
     private void Update()
     {
-        if (IsOwner && playerInput.currentControlScheme != "Gamepad")
+
+        if (IsOwner && playerInput.currentControlScheme != "Gamepad" && !uiController.isPaused)
         {
             // aim grapple on kbm
             Vector2 lookPosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             aimDirection = (lookPosition - (Vector2)tongue.transform.position).normalized;
 
         }
-        if (grappleObject == null)
+        if (uiController.isPaused)
+        {
+            tongue.SetTongueTargetNone();
+        }
+        else if (grappleObject == null)
         {
             tongue.SetTongueTargetDefault();
         }
@@ -139,6 +148,8 @@ public class PlayerMovement : NetworkBehaviour
 
     public void OnMove(InputAction.CallbackContext context)
     {
+        if (uiController.isPaused)
+            return;
         if (playerInput.currentControlScheme != "Gamepad")
         {
             // moves player on kbm\
@@ -172,6 +183,9 @@ public class PlayerMovement : NetworkBehaviour
 
     public void OnGrapple(InputAction.CallbackContext context)
     {
+        if (uiController.isPaused)
+            return;
+
         if (context.performed)
         {
             TryGrapple();

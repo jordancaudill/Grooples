@@ -186,14 +186,12 @@ public class UIController : MonoBehaviour
 
     public void ResumeGame()
     {
-        Time.timeScale = 1f;
         pauseCanvas.SetActive(false);
         isPaused = false;
     }
     public void PauseGame()
     {
 
-        Time.timeScale = 0;
         pauseCanvas.SetActive(true);
         isPaused = true;
 

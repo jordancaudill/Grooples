@@ -56,7 +56,7 @@ MonoBehaviour:
   _objectPool: {fileID: 0}
   _persistence: 0
   _logging: {fileID: 0}
-  _spawnablePrefabs: {fileID: 11400000, guid: daeaae7dbf77b4b41900742219954d1c, type: 2}
+  _spawnablePrefabs: {fileID: 11400000, guid: 06ef4395abab3c0459210a9a30528701, type: 2}
 --- !u!114 &7443408887813606060
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -107,7 +107,7 @@ MonoBehaviour:
   Transport: {fileID: 0}
   _intermediateLayer: {fileID: 0}
   _latencySimulator:
-    _enabled: 1
+    _enabled: 0
     _simulateHost: 1
     _latency: 100
     _outOfOrder: 0
