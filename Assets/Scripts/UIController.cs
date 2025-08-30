@@ -4,8 +4,8 @@ using FishNet.Object;
 using FishNet.Transporting;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class UIController : MonoBehaviour
 {
@@ -144,6 +144,17 @@ public class UIController : MonoBehaviour
         sceneManager.LoadGlobalScenes(sld);
     }
 
+    public void LoadLevel(int levelNumber)
+    {
+        if (gameManager == null)
+        {
+            gameManager = FindFirstObjectByType<GameManager>();
+        }
+
+        gameManager.currentLevel.Value = levelNumber;
+        LoadScene("Level" + levelNumber.ToString());
+    }
+
     public void QuitToLobby()
     {
         if (_networkManager.ServerManager.IsAnyServerStarted())
@@ -165,13 +176,14 @@ public class UIController : MonoBehaviour
             gameManager = FindFirstObjectByType<GameManager>();
         }
 
-        if (gameManager.currentLevel >= levelCount) // Assuming 5 is the last level
+        if (gameManager.currentLevel.Value >= levelCount) 
         {
             LoadScene("Lobby");
         } else
         {
-            gameManager.currentLevel++;
-            LoadScene("Level" + gameManager.currentLevel.ToString());
+            
+            gameManager.currentLevel.Value++;
+            LoadScene("Level" + gameManager.currentLevel.Value.ToString());
             successScreen.SetActive(false);
         }
     }

@@ -1,3 +1,4 @@
+using FishNet.Component.Spawning;
 using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Managing.Scened;
@@ -19,9 +20,9 @@ public class GameManager : NetworkBehaviour
     private NetworkManager _networkManager;
     public NetworkObject playerPrefab;
     public NetworkObject playerLobbyPrefab;
-    public int currentLevel = 1;
+    public readonly SyncVar<int> currentLevel = new SyncVar<int>(0);
 
-    private SceneManager sceneManager;
+    public SceneManager sceneManager;
 
     void Start()
     {
@@ -48,9 +49,12 @@ public class GameManager : NetworkBehaviour
             if (args.LoadedScenes[0].name == "Lobby")
             {
                 SpawnPlayerLobbyPrefabs();
+               
+
             }
             else
             {
+              
                 SpawnPlayerPrefabs();
 
             }
@@ -63,6 +67,13 @@ public class GameManager : NetworkBehaviour
         if (state.ConnectionState == RemoteConnectionState.Started)
         {
             AddPlayer(connection.ClientId);
+            if (currentLevel.Value > 0)
+            {
+                SpawnPlayerPrefab(connection.ClientId);
+            } else
+            {
+                SpawnPlayerLobbyPrefab(connection.ClientId);
+            }
         }
         else
         {
@@ -77,15 +88,27 @@ public class GameManager : NetworkBehaviour
         // Spawn player prefab for each player
         foreach (Player player in _players)
         {
-            NetworkObject playerObject = Instantiate(playerPrefab);
-            //playerObject.GetComponent<PlayerMovement>().clientId = player.clientId; // Set clientId on the player object
-            //playerObject.GetComponent<PlayerMovement>().color = player.color; // Set color on the player object
-            // Get the client connection for the player
-            NetworkConnection conn = _networkManager.ServerManager.Clients.First(c => c.Key == player.clientId).Value;
-
-            _networkManager.ServerManager.Spawn(playerObject, conn);
+            SpawnPlayerPrefab(player.clientId);
         }
     }
+
+    [Server]
+    public void SpawnPlayerPrefab(int clientId)
+    {
+        NetworkObject playerObject = Instantiate(playerPrefab);
+        NetworkConnection conn = _networkManager.ServerManager.Clients.First(c => c.Key == clientId).Value;
+        _networkManager.ServerManager.Spawn(playerObject, conn);
+    }
+
+    [Server]
+    public void SpawnPlayerLobbyPrefab(int clientId)
+    {
+        NetworkObject playerObject = Instantiate(playerLobbyPrefab);
+        NetworkConnection conn = _networkManager.ServerManager.Clients.First(c => c.Key == clientId).Value;
+        _networkManager.ServerManager.Spawn(playerObject, conn);
+    }
+
+
 
     [Server]
     public void SpawnPlayerLobbyPrefabs()
@@ -93,13 +116,7 @@ public class GameManager : NetworkBehaviour
         // Spawn player prefab for each player
         foreach (Player player in _players)
         {
-            NetworkObject playerObject = Instantiate(playerLobbyPrefab);
-            //playerObject.GetComponent<PlayerMovement>().clientId = player.clientId; // Set clientId on the player object
-            //playerObject.GetComponent<PlayerMovement>().color = player.color; // Set color on the player object
-            // Get the client connection for the player
-            NetworkConnection conn = _networkManager.ServerManager.Clients.First(c => c.Key == player.clientId).Value;
-
-            _networkManager.ServerManager.Spawn(playerObject, conn);
+            SpawnPlayerLobbyPrefab(player.clientId);
         }
     }
 
