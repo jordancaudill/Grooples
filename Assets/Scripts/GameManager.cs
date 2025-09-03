@@ -1,3 +1,4 @@
+using FishNet.Component.Spawning;
 using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Managing.Scened;
@@ -5,6 +6,7 @@ using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using System.Linq;
+using UnityEngine;
 
 public class Player
 {
@@ -45,12 +47,19 @@ public class GameManager : NetworkBehaviour
         // Spawn player prefab when the scene is set
         if (args.LoadedScenes.Length > 0)
         {
+            PlayerSpawner playerSpawner = FindFirstObjectByType<PlayerSpawner>();
+
             if (args.LoadedScenes[0].name == "Lobby")
-            {
+            {            
+                playerSpawner.Spawns[0] = GameObject.Find("PlayerGrid").transform;
+                playerSpawner.SetPlayerPrefab(playerLobbyPrefab);
                 SpawnPlayerLobbyPrefabs();
             }
             else
             {
+                playerSpawner.Spawns[0] = GameObject.Find("Spawn").transform;
+                playerSpawner.SetPlayerPrefab(playerPrefab);
+
                 SpawnPlayerPrefabs();
 
             }
