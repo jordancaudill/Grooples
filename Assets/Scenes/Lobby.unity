@@ -204,12 +204,12 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1419158497}
         m_TargetAssemblyTypeName: UIController, Assembly-CSharp
-        m_MethodName: LoadLevel
-        m_Mode: 3
+        m_MethodName: LoadScene
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 4
+          m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: Level4
           m_BoolArgument: 0
@@ -1661,7 +1661,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7443408887813606060, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7443408887813606060, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       propertyPath: _playerPrefab
@@ -1675,8 +1675,7 @@ PrefabInstance:
       propertyPath: 'Spawns.Array.data[0]'
       value: 
       objectReference: {fileID: 1238357211}
-    m_RemovedComponents:
-    - {fileID: 7443408887813606060, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
@@ -1924,12 +1923,12 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1419158497}
         m_TargetAssemblyTypeName: UIController, Assembly-CSharp
-        m_MethodName: LoadLevel
-        m_Mode: 3
+        m_MethodName: LoadScene
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 3
+          m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: Level3
           m_BoolArgument: 0
@@ -2937,12 +2936,12 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1419158497}
         m_TargetAssemblyTypeName: UIController, Assembly-CSharp
-        m_MethodName: LoadLevel
-        m_Mode: 3
+        m_MethodName: LoadScene
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 1
+          m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: Level1
           m_BoolArgument: 0
@@ -3452,12 +3451,12 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1419158497}
         m_TargetAssemblyTypeName: UIController, Assembly-CSharp
-        m_MethodName: LoadLevel
-        m_Mode: 3
+        m_MethodName: LoadScene
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 2
+          m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: Level2
           m_BoolArgument: 0
@@ -5034,12 +5033,12 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1419158497}
         m_TargetAssemblyTypeName: UIController, Assembly-CSharp
-        m_MethodName: LoadLevel
-        m_Mode: 3
+        m_MethodName: LoadScene
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 5
+          m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: Level5
           m_BoolArgument: 0
