@@ -131,7 +131,7 @@ public class PlayerMovement : NetworkBehaviour
         if (playerInput.currentControlScheme == "Gamepad")
         {
             // moves player on gamepad
-            //moveInput = context.ReadValue<Vector2>();
+            moveInput = context.ReadValue<Vector2>();
             Vector2 readInput = context.ReadValue<Vector2>();
             if (readInput != Vector2.zero)
             {
@@ -183,12 +183,12 @@ public class PlayerMovement : NetworkBehaviour
         }
         else
         {
-            //// aim grapple on gamepad
-            //if (context.ReadValue<Vector2>().normalized != Vector2.zero)
-            //{
-            //        aimDirection = (context.ReadValue<Vector2>().normalized);
+            // aim grapple on gamepad
+            if (context.ReadValue<Vector2>().normalized != Vector2.zero)
+            {
+                aimDirection = (context.ReadValue<Vector2>().normalized);
 
-            //}
+            }
 
         }
 
