@@ -793,7 +793,7 @@ SpringJoint2D:
   m_Anchor: {x: 0, y: 0}
   m_ConnectedAnchor: {x: 0, y: 0}
   m_AutoConfigureDistance: 0
-  m_Distance: 2
+  m_Distance: 3
   m_DampingRatio: 1
   m_Frequency: 1
 --- !u!50 &5989748641023836935
@@ -1069,6 +1069,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 9166242095118903001}
   _networkObjectCache: {fileID: 9166242095118903001}
   moveSpeed: 5
+  hangMoveSpeed: 15
   terrainLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -1103,7 +1104,7 @@ MonoBehaviour:
   maxDistance: 9
   minDistance: 1
   launchSpeed: 1
-  hangDistance: 2
+  hangDistance: 5
   minPopupDistance: 1.25
 --- !u!58 &701968169404931231
 CircleCollider2D:

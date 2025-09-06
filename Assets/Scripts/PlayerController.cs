@@ -265,7 +265,8 @@ public class PlayerController : NetworkBehaviour
 
         if (data.Move != Vector2.zero)
         {
-            PredictionRigidbody.AddForce(new Vector2(data.Move.x * playerMovement.moveSpeed, 0), ForceMode2D.Force);
+            float speed = localGrappleObject != null ? playerMovement.hangMoveSpeed : playerMovement.moveSpeed;
+            PredictionRigidbody.AddForce(new Vector2(data.Move.x * speed, 0), ForceMode2D.Force);
         }
 
         if (data.Popup)

@@ -9,6 +9,7 @@ public class PlayerMovement : NetworkBehaviour
 
     [Header("Movement Settings")]
     public float moveSpeed = 5f;
+    public float hangMoveSpeed = 15f;
 
     public LayerMask terrainLayer;
 
