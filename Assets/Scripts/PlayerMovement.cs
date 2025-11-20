@@ -57,6 +57,8 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float minPopupDistance = 1.25f;
     private int terrainLayerNumber = 3;
     private int playersLayerNumber = 7;
+    GameObject KBMIcons;
+    GameObject GamepadIcons;
 
 
     public void Start()
@@ -65,6 +67,9 @@ public class PlayerMovement : NetworkBehaviour
         spawnPoint = GameObject.Find("Spawn").transform;
         transform.position = spawnPoint.position;
         uiController = FindFirstObjectByType<UIController>();
+        KBMIcons = GameObject.Find("KBMIcons");
+        GamepadIcons = GameObject.Find("GamepadIcons");
+
 
     }
 
@@ -111,6 +116,29 @@ public class PlayerMovement : NetworkBehaviour
             tongue.SetTongueTargetHit();
         }
 
+        CheckIcons();
+
+    }
+
+    private void CheckIcons()
+    {
+
+        if (KBMIcons != null && GamepadIcons != null && playerInput.currentControlScheme != "Gamepad")
+        {
+            KBMIcons.SetActive(true);
+            GamepadIcons.SetActive(false);
+            Cursor.visible = true;
+
+        }
+        else if (KBMIcons != null && GamepadIcons != null && playerInput.currentControlScheme == "Gamepad")
+        {
+            KBMIcons.SetActive(false);
+            GamepadIcons.SetActive(true);
+            Cursor.visible = false;
+        }
+
+
+
     }
     private void FixedUpdate()
     {
@@ -133,21 +161,22 @@ public class PlayerMovement : NetworkBehaviour
         {
             // moves player on gamepad
             moveInput = context.ReadValue<Vector2>();
-            Vector2 readInput = context.ReadValue<Vector2>();
-            if (readInput != Vector2.zero)
-            {
-                aimDirection = (readInput.normalized);
+            //Vector2 readInput = context.ReadValue<Vector2>();
+            //if (readInput != Vector2.zero)
+            //{
+            //    aimDirection = (readInput.normalized);
 
-            }
-            if (grappleObject != null)
-            {
-                moveInput = context.ReadValue<Vector2>();
-            }
-            else
-            {
-                moveInput = Vector2.zero;
+            //}
 
-            }
+            //if (grappleObject != null)
+            //{
+            //    moveInput = context.ReadValue<Vector2>();
+            //}
+            //else
+            //{
+            //    moveInput = Vector2.zero;
+
+            //}
 
         }
         else

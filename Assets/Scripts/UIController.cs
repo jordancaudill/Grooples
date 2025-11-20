@@ -102,8 +102,6 @@ public class UIController : MonoBehaviour
             keyboardIcons.SetActive(!isGamepad && _networkManager.ClientManager.Started);
 
         }
-
-
     }
 
     void CheckForPause()
@@ -158,6 +156,18 @@ public class UIController : MonoBehaviour
         }
     }
 
+    public void LoadLevel(int levelNumber)
+    {
+        if (gameManager == null)
+        {
+            gameManager = FindFirstObjectByType<GameManager>();
+        }
+
+        gameManager.currentLevel = levelNumber;
+        LoadScene("Level" + levelNumber.ToString());
+        successScreen.SetActive(false);
+    }
+
     public void LoadNextLevel()
     {
         if (gameManager == null)
@@ -168,7 +178,8 @@ public class UIController : MonoBehaviour
         if (gameManager.currentLevel >= levelCount) // Assuming 5 is the last level
         {
             LoadScene("Lobby");
-        } else
+        }
+        else
         {
             gameManager.currentLevel++;
             LoadScene("Level" + gameManager.currentLevel.ToString());
