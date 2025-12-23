@@ -593,6 +593,7 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
+    Server: FISHNET;FISHNET_V4
     Standalone: FISHNET;FISHNET_V4;APP_UI_EDITOR_ONLY
     WebGL: FISHNET;FISHNET_V4;APP_UI_EDITOR_ONLY
   additionalCompilerArguments: {}

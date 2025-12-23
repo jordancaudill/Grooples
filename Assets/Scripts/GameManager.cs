@@ -1,3 +1,4 @@
+using System.Linq;
 using FishNet.Component.Spawning;
 using FishNet.Connection;
 using FishNet.Managing;
@@ -5,7 +6,6 @@ using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
-using System.Linq;
 using UnityEngine;
 
 public class Player
@@ -16,35 +16,41 @@ public class Player
 
 public class GameManager : NetworkBehaviour
 {
-
     public readonly SyncList<Player> _players = new SyncList<Player>();
     private NetworkManager _networkManager;
     public NetworkObject playerPrefab;
     public NetworkObject playerLobbyPrefab;
     public int currentLevel = 1;
+    public readonly SyncVar<string> joinCode = new SyncVar<string>();
 
     private SceneManager sceneManager;
 
     void Start()
     {
         _networkManager = FindFirstObjectByType<NetworkManager>();
-        _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
-        _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
+        _networkManager.ServerManager.OnRemoteConnectionState +=
+            ServerManager_OnRemoteConnectionState;
+        _networkManager.ServerManager.OnServerConnectionState +=
+            ServerManager_OnServerConnectionState;
         _networkManager.ClientManager.OnAuthenticated += ClientManager_OnAuthenticated;
 
         sceneManager = FindFirstObjectByType<SceneManager>();
         sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
-
-
     }
 
     private void OnDestroy()
     {
-        _networkManager.ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
-        _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
+        _networkManager.ServerManager.OnRemoteConnectionState -=
+            ServerManager_OnRemoteConnectionState;
+        _networkManager.ServerManager.OnServerConnectionState -=
+            ServerManager_OnServerConnectionState;
         _networkManager.ClientManager.OnAuthenticated -= ClientManager_OnAuthenticated;
         sceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
+    }
 
+    public void SetJoinCode(string code)
+    {
+        joinCode.Value = code;
     }
 
     public void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)
@@ -55,7 +61,9 @@ public class GameManager : NetworkBehaviour
             PlayerSpawner playerSpawner = FindFirstObjectByType<PlayerSpawner>();
 
             if (args.LoadedScenes[0].name == "Lobby")
-            {            
+            {
+                if (GameObject.Find("PlayerGrid") == null)
+                    return;
                 playerSpawner.Spawns[0] = GameObject.Find("PlayerGrid").transform;
                 playerSpawner.SetPlayerPrefab(playerLobbyPrefab);
                 SpawnPlayerLobbyPrefabs();
@@ -66,13 +74,14 @@ public class GameManager : NetworkBehaviour
                 playerSpawner.SetPlayerPrefab(playerPrefab);
 
                 SpawnPlayerPrefabs();
-
             }
         }
-
     }
 
-    public void ServerManager_OnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs state)
+    public void ServerManager_OnRemoteConnectionState(
+        NetworkConnection connection,
+        RemoteConnectionStateArgs state
+    )
     {
         if (state.ConnectionState == RemoteConnectionState.Started)
         {
@@ -92,9 +101,8 @@ public class GameManager : NetworkBehaviour
     public void ClientManager_OnAuthenticated()
     {
         Debug.Log("Client authenticated: ");
-        AddPlayer(1);
+        // AddPlayer(1);
     }
-
 
     [Server]
     public void SpawnPlayerPrefabs()
@@ -106,7 +114,9 @@ public class GameManager : NetworkBehaviour
             //playerObject.GetComponent<PlayerMovement>().clientId = player.clientId; // Set clientId on the player object
             //playerObject.GetComponent<PlayerMovement>().color = player.color; // Set color on the player object
             // Get the client connection for the player
-            NetworkConnection conn = _networkManager.ServerManager.Clients.First(c => c.Key == player.clientId).Value;
+            NetworkConnection conn = _networkManager
+                .ServerManager.Clients.First(c => c.Key == player.clientId)
+                .Value;
 
             _networkManager.ServerManager.Spawn(playerObject, conn);
         }
@@ -122,14 +132,13 @@ public class GameManager : NetworkBehaviour
             //playerObject.GetComponent<PlayerMovement>().clientId = player.clientId; // Set clientId on the player object
             //playerObject.GetComponent<PlayerMovement>().color = player.color; // Set color on the player object
             // Get the client connection for the player
-            NetworkConnection conn = _networkManager.ServerManager.Clients.First(c => c.Key == player.clientId).Value;
+            NetworkConnection conn = _networkManager
+                .ServerManager.Clients.First(c => c.Key == player.clientId)
+                .Value;
 
             _networkManager.ServerManager.Spawn(playerObject, conn);
         }
     }
-
-
-
 
     [Server]
     public void AddPlayer(int newClientId)
@@ -138,7 +147,7 @@ public class GameManager : NetworkBehaviour
         newPlayer.clientId = newClientId;
         newPlayer.color = GetFirstAvailableColor();
         _players.Add(newPlayer);
-        //Call dirty on an index after modifying an entries field to force a synchronize. 
+        //Call dirty on an index after modifying an entries field to force a synchronize.
         _players.Dirty(0);
     }
 
@@ -150,12 +159,11 @@ public class GameManager : NetworkBehaviour
         if (index >= 0)
         {
             _players.RemoveAt(index);
-            // Call dirty on an index after modifying an entries field to force a synchronize. 
+            // Call dirty on an index after modifying an entries field to force a synchronize.
             if (_players.Count > 0)
                 _players.Dirty(0);
         }
     }
-
 
     // Sets the given player's color to the next available color
     [ServerRpc(RequireOwnership = false)]
@@ -188,8 +196,6 @@ public class GameManager : NetworkBehaviour
             _players.Dirty(index);
         }
     }
-
-
 
     public string GetFirstAvailableColor()
     {
@@ -255,8 +261,4 @@ public class GameManager : NetworkBehaviour
         Player player = _players.Find(p => p.clientId == clientId);
         return player != null ? player.color : "pink";
     }
-
-
 }
-
-

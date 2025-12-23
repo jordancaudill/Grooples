@@ -298,7 +298,7 @@ public class PlayerMovement : NetworkBehaviour
         // Randomize the pitch slightly for variation
         audioSource.pitch = Random.Range(0.5f, 1.5f);
 
-        AudioClip clipToPlay = null;
+        AudioClip clipToPlay;
 
         if (clip == "squelch")
         {
