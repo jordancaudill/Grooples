@@ -32,6 +32,7 @@ public class UIController : MonoBehaviour
     public NetworkObject gameManagerPrefab;
     private GameManager gameManager;
     public GameObject keyboardIcons;
+    public GameObject exitButton;
     public GameObject gamepadIcons;
     public NetworkManager _networkManager;
     public PlayerInput playerInput;
@@ -60,6 +61,14 @@ public class UIController : MonoBehaviour
         sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
         SetConnectedButtonStates();
         SetCopyableJoinCode(gameManager?.joinCode?.Value);
+
+#if UNITY_WEBGL
+        // Disable exit and copy buttons on WebGL
+        if (exitButton != null)
+        {
+            exitButton.SetActive(false);
+        }
+#endif
     }
 
     public void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)

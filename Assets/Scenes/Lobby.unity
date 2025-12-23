@@ -4726,6 +4726,7 @@ MonoBehaviour:
   lobbyPlayerGrid: {fileID: 1238357209}
   gameManagerPrefab: {fileID: 6792337606350198594, guid: 0bff442c82dd4a74db61ea41cb7182d0, type: 3}
   keyboardIcons: {fileID: 1590586877}
+  exitButton: {fileID: 1188428721}
   gamepadIcons: {fileID: 524426525}
   _networkManager: {fileID: 550754280}
   playerInput: {fileID: 1419158500}
