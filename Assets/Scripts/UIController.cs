@@ -43,32 +43,18 @@ public class UIController : MonoBehaviour
         sceneManager = FindFirstObjectByType<FishNet.Managing.Scened.SceneManager>();
         pauseAction = InputSystem.actions.FindAction("Pause");
         sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
+        #if UNITY_WEBGL
+            
+        #else
+            HostGame();
+        #endif
 
     }
 
     public void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)
     {
 
-        if (connectedButtons != null && unconnectedButtons != null)
-        {
-            if (_networkManager.ClientManager.Connection.IsValid)
-            {
-                unconnectedButtons.SetActive(false);
-                connectedButtons.SetActive(true);
-                if (_networkManager.IsServerStarted)
-                {
-                    playButton.GetComponent<Button>().interactable = true;
-                }
-
-            }
-            else
-            {
-                unconnectedButtons.SetActive(true);
-                connectedButtons.SetActive(false);
-            }
-
-        }
-
+        SetConnectedButtonStates();
 
     }
 
@@ -165,7 +151,10 @@ public class UIController : MonoBehaviour
 
         gameManager.currentLevel = levelNumber;
         LoadScene("Level" + levelNumber.ToString());
-        successScreen.SetActive(false);
+        if (successScreen != null)
+        {
+            successScreen.SetActive(false);
+        }
     }
 
     public void LoadNextLevel()
@@ -212,7 +201,6 @@ public class UIController : MonoBehaviour
     {
         _networkManager.ServerManager.StartConnection();
         _networkManager.ClientManager.StartConnection();
-
     }
 
     public void SetIPInput(string value)
@@ -222,6 +210,7 @@ public class UIController : MonoBehaviour
 
     public void ConnectToIP()
     {
+        Disconnect();
         if (ipInput == null)
         {
             _networkManager.ClientManager.StartConnection();
@@ -233,6 +222,12 @@ public class UIController : MonoBehaviour
     }
 
     public void LeaveParty()
+    {
+        Disconnect();
+        HostGame();
+    }
+
+    public void Disconnect()
     {
         _networkManager.ClientManager.StopConnection();
         if (_networkManager.ServerManager.Started)
@@ -246,19 +241,27 @@ public class UIController : MonoBehaviour
 
     public void ClientManager_OnClientConnectionState(ClientConnectionStateArgs obj)
     {
+           SetConnectedButtonStates();
+
+        
+        
+    }
+
+    private void SetConnectedButtonStates()
+    {
         if (connectedButtons && unconnectedButtons)
         {
-            if (obj.ConnectionState == LocalConnectionState.Started)
-            {
-                unconnectedButtons.SetActive(false);
-                connectedButtons.SetActive(true);
-            }
-            else
-            {
-                unconnectedButtons.SetActive(true);
-                connectedButtons.SetActive(false);
-            }
+            int numberOfPlayers = _networkManager.ServerManager.Clients.Count;
+            bool isWebGL = false;
+            // If is under WebGL, enable the unconnected buttons when there is 1 player
+            #if UNITY_WEBGL
+                isWebGL = true;
+            #endif
+            Debug.Log("WebGL: " + isWebGL);
 
+            unconnectedButtons.SetActive(numberOfPlayers == 1  && !isWebGL);
+            connectedButtons.SetActive(numberOfPlayers > 1);
+            playButton.GetComponent<Button>().interactable = _networkManager.IsServerStarted;
         }
     }
 
@@ -266,17 +269,22 @@ public class UIController : MonoBehaviour
     {
         if (obj.ConnectionState == LocalConnectionState.Started)
         {
-            NetworkObject gameManager = Instantiate(gameManagerPrefab);
-            gameManager.name = "GameManager";
-            _networkManager.ServerManager.Spawn(gameManager);
+            CreateGameManager();
 
-            if (playButton)
-            {
-                playButton.GetComponent<Button>().interactable = obj.ConnectionState == LocalConnectionState.Started;
-            }
+            // if (playButton)
+            // {
+            //     playButton.GetComponent<Button>().interactable = obj.ConnectionState == LocalConnectionState.Started;
+            // }
 
         }
 
+    }
+
+    public void CreateGameManager()
+    {
+        NetworkObject gameManager = Instantiate(gameManagerPrefab);
+        gameManager.name = "GameManager";
+        _networkManager.ServerManager.Spawn(gameManager);
     }
 
     public void OnNextColor(InputAction.CallbackContext context)
@@ -313,12 +321,16 @@ public class UIController : MonoBehaviour
 
     public void ExitGame()
     {
-#if UNITY_STANDALONE
-        Application.Quit();
-#endif
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#endif
+        #if UNITY_WEBGL
+            return;
+        #endif
+
+        #if UNITY_STANDALONE
+                Application.Quit();
+        #endif
+        #if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+        #endif
     }
 
 }

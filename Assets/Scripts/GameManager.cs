@@ -29,6 +29,9 @@ public class GameManager : NetworkBehaviour
     {
         _networkManager = FindFirstObjectByType<NetworkManager>();
         _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
+        _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
+        _networkManager.ClientManager.OnAuthenticated += ClientManager_OnAuthenticated;
+
         sceneManager = FindFirstObjectByType<SceneManager>();
         sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
 
@@ -38,6 +41,8 @@ public class GameManager : NetworkBehaviour
     private void OnDestroy()
     {
         _networkManager.ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
+        _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
+        _networkManager.ClientManager.OnAuthenticated -= ClientManager_OnAuthenticated;
         sceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
 
     }
@@ -73,10 +78,21 @@ public class GameManager : NetworkBehaviour
         {
             AddPlayer(connection.ClientId);
         }
-        else
+        else if (state.ConnectionState == RemoteConnectionState.Stopped)
         {
             RemovePlayer(connection.ClientId);
         }
+    }
+
+    public void ServerManager_OnServerConnectionState(ServerConnectionStateArgs obj)
+    {
+        Debug.Log("woohoo");
+    }
+
+    public void ClientManager_OnAuthenticated()
+    {
+        Debug.Log("Client authenticated: ");
+        AddPlayer(1);
     }
 
 
@@ -186,8 +202,8 @@ public class GameManager : NetworkBehaviour
                 return color.Key;
             }
         }
-        // If no available colors, just return white.
-        return "white";
+        // If no available colors, just return pink.
+        return "pink";
     }
 
     public string GetNextAvailableColor(string currentColor)
@@ -208,8 +224,8 @@ public class GameManager : NetworkBehaviour
                 return nextColor;
             }
         }
-        // If all colors are taken, return "white"
-        return "white";
+        // If all colors are taken, return "pink"
+        return "pink";
     }
 
     public string GetPreviousAvailableColor(string currentColor)
@@ -230,14 +246,14 @@ public class GameManager : NetworkBehaviour
                 return prevColor;
             }
         }
-        // If all colors are taken, return "white"
-        return "white";
+        // If all colors are taken, return "pink"
+        return "pink";
     }
 
     public string GetPlayerColor(int clientId)
     {
         Player player = _players.Find(p => p.clientId == clientId);
-        return player != null ? player.color : "white";
+        return player != null ? player.color : "pink";
     }
 
 
