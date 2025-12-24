@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using FishNet.Managing.Scened;
 using FishNet.Managing.Timing;
 using FishNet.Object;
@@ -5,14 +7,11 @@ using FishNet.Object.Prediction;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using GameKit.Dependencies.Utilities;
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Cinemachine;
 using UnityEngine;
 
 public class PlayerController : NetworkBehaviour
 {
-
     public readonly SyncVar<int> playerNumber = new SyncVar<int>();
 
     public PlayerMovement playerMovement;
@@ -38,21 +37,35 @@ public class PlayerController : NetworkBehaviour
     {
         // The player's current movement input
         public Vector2 Move;
+
         // The position to teleport the player to (if any)
         public Vector2 Teleport;
+
         // The normalized aim direction (if any)
         public Vector2 Aim;
+
         // The point the player is popping from
         public bool Popup;
+
         // the network id of the object being grappled to, if any
         public int GrappleObjectId;
+
         // Offset from the grapple object's position to the grapple point
         public Vector2 GrappleOffset;
         public bool StartGrapple;
         public bool StopGrapple;
 
-
-        public ReplicateData(Vector2 move, Vector2 teleport, Vector2 aim, bool popup, int grappleObjectId, Vector2 grappleOffset, bool startGrapple, bool stopGrapple) : this()
+        public ReplicateData(
+            Vector2 move,
+            Vector2 teleport,
+            Vector2 aim,
+            bool popup,
+            int grappleObjectId,
+            Vector2 grappleOffset,
+            bool startGrapple,
+            bool stopGrapple
+        )
+            : this()
         {
             Move = move;
             Teleport = teleport;
@@ -65,23 +78,25 @@ public class PlayerController : NetworkBehaviour
         }
 
         private uint _tick;
+
         public void Dispose() { }
+
         public uint GetTick() => _tick;
+
         public void SetTick(uint value) => _tick = value;
-
-
     }
 
     private GameObject GetObjectById(int networkObjectId)
     {
         NetworkObject found;
-        Dictionary<int, NetworkObject> spawned = IsServerInitialized ? NetworkManager.ServerManager.Objects.Spawned : NetworkManager.ClientManager.Objects.Spawned;
+        Dictionary<int, NetworkObject> spawned = IsServerInitialized
+            ? NetworkManager.ServerManager.Objects.Spawned
+            : NetworkManager.ClientManager.Objects.Spawned;
         if (spawned.TryGetValue(networkObjectId, out found))
         {
             return found.gameObject;
         }
         return null;
-
     }
 
     public struct ReconcileData : IReconcileData
@@ -93,14 +108,18 @@ public class PlayerController : NetworkBehaviour
         //handled with PredictionRigidbody.
         public PredictionRigidbody2D PredictionRigidbody;
 
-        public ReconcileData(PredictionRigidbody2D pr) : this()
+        public ReconcileData(PredictionRigidbody2D pr)
+            : this()
         {
             PredictionRigidbody = pr;
         }
 
         private uint _tick;
+
         public void Dispose() { }
+
         public uint GetTick() => _tick;
+
         public void SetTick(uint value) => _tick = value;
     }
 
@@ -109,7 +128,6 @@ public class PlayerController : NetworkBehaviour
         PredictionRigidbody = ObjectCaches<PredictionRigidbody2D>.Retrieve();
         PredictionRigidbody.Initialize(GetComponent<Rigidbody2D>());
         //playerNumber.OnChange += OnPlayerNumberChanged;
-
     }
 
     private void Start()
@@ -119,11 +137,9 @@ public class PlayerController : NetworkBehaviour
         sceneManager.OnLoadStart += SceneManager_OnLoadStart;
         sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
         SetPlayerColor();
-
     }
 
-
-    private void SceneManager_OnLoadStart(SceneLoadStartEventArgs args )
+    private void SceneManager_OnLoadStart(SceneLoadStartEventArgs args)
     {
         if (IsServerInitialized && args.QueueData.SceneLoadData.SceneLookupDatas[0].Name == "Lobby")
         {
@@ -139,15 +155,13 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-
     private void OnDestroy()
     {
         ObjectCaches<PredictionRigidbody2D>.StoreAndDefault(ref PredictionRigidbody);
         sceneManager.OnLoadStart -= SceneManager_OnLoadStart;
         sceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
-
-
     }
+
     public override void OnStartNetwork()
     {
         TimeManager.OnTick += TimeManager_OnTick;
@@ -176,19 +190,13 @@ public class PlayerController : NetworkBehaviour
         {
             localStartGrapple = true;
             playerMovement.startGrapple = false; // Reset startGrapple after using it
-
         }
         if (!localStopGrapple && playerMovement.stopGrapple)
         {
             localStopGrapple = true;
             playerMovement.stopGrapple = false; // Reset startGrapple after using it
-
         }
-
-
-
     }
-
 
     private void TimeManager_OnTick()
     {
@@ -200,19 +208,17 @@ public class PlayerController : NetworkBehaviour
         if (!IsOwner)
             return default;
 
-
-
         //Build the replicate data with all inputs which affect the prediction.
         int grappleObjectNetworkId = 0;
         if (playerMovement.grappleObject != null)
         {
-            NetworkObject networkObject = playerMovement.grappleObject.GetComponent<NetworkObject>();
+            NetworkObject networkObject =
+                playerMovement.grappleObject.GetComponent<NetworkObject>();
             if (networkObject != null)
             {
                 grappleObjectNetworkId = networkObject.ObjectId;
             }
         }
-
 
         ReplicateData md = new ReplicateData(
             playerMovement.moveInput,
@@ -223,9 +229,7 @@ public class PlayerController : NetworkBehaviour
             playerMovement.grappleOffset,
             localStartGrapple, // use the stored value
             localStopGrapple // use the stored value
-
         );
-
 
         // Reset local single-frame inputs
         localPopup = false;
@@ -235,9 +239,12 @@ public class PlayerController : NetworkBehaviour
     }
 
     [Replicate]
-    private void RunInputs(ReplicateData data, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable)
+    private void RunInputs(
+        ReplicateData data,
+        ReplicateState state = ReplicateState.Invalid,
+        Channel channel = Channel.Unreliable
+    )
     {
-
         //If in the future then simply zero out velocities
         //and exit the method to prevent checking any input logic.
         //Using this approach will allow objects to still collide with
@@ -249,7 +256,6 @@ public class PlayerController : NetworkBehaviour
             PredictionRigidbody.AngularVelocity(0);
             return;
         }
-
 
         //Be sure to always apply and set velocties using PredictionRigidbody
         //and never on the rigidbody itself; this includes if also accessing from
@@ -265,13 +271,20 @@ public class PlayerController : NetworkBehaviour
 
         if (data.Move != Vector2.zero)
         {
-            float speed = localGrappleObject != null ? playerMovement.hangMoveSpeed : playerMovement.moveSpeed;
+
+            float speed =
+                localGrappleObject != null
+                    ? playerMovement.hangMoveSpeed
+                    : playerMovement.moveSpeed;
             PredictionRigidbody.AddForce(new Vector2(data.Move.x * speed, 0), ForceMode2D.Force);
         }
 
         if (data.Popup)
         {
-            PredictionRigidbody.AddForce(data.Aim * -1 * playerMovement.popupForce, ForceMode2D.Impulse);
+            PredictionRigidbody.AddForce(
+                data.Aim * -1 * playerMovement.popupForce,
+                ForceMode2D.Impulse
+            );
         }
 
         if (localGrappleObject == null && data.GrappleObjectId != 0)
@@ -286,9 +299,7 @@ public class PlayerController : NetworkBehaviour
                 springJoint2D.connectedBody = localGrappleObject.GetComponent<Rigidbody2D>();
                 springJoint2D.connectedAnchor = data.GrappleOffset;
                 springJoint2D.enabled = true;
-
             }
-
         }
         else if (localGrappleObject != null && data.GrappleObjectId == 0)
         {
@@ -307,12 +318,14 @@ public class PlayerController : NetworkBehaviour
 
             if (localGrappleObject != null)
             {
-                playerMovement.lastGrapplePoint = (Vector2)localGrappleObject.transform.TransformPoint(data.GrappleOffset);
+                playerMovement.lastGrapplePoint = (Vector2)
+                    localGrappleObject.transform.TransformPoint(data.GrappleOffset);
             }
             else if (data.Popup)
             {
-                playerMovement.lastGrapplePoint = tongue.transform.TransformPoint(data.Aim * -1 * tongue.defaultTongueLength);
-
+                playerMovement.lastGrapplePoint = tongue.transform.TransformPoint(
+                    data.Aim * -1 * tongue.defaultTongueLength
+                );
             }
 
             if (data.StartGrapple)
@@ -327,7 +340,6 @@ public class PlayerController : NetworkBehaviour
                 playerMovement.grappleObject = null;
                 tongue.ResetTongueWaves();
             }
-
         }
 
         PredictionRigidbody.Simulate();
@@ -359,12 +371,9 @@ public class PlayerController : NetworkBehaviour
         PredictionRigidbody.Reconcile(data.PredictionRigidbody);
     }
 
-
     public override void OnStartClient()
     {
-
         StartCoroutine(WaitForCinemachineTargetGroup());
-
     }
 
     IEnumerator WaitForCinemachineTargetGroup()
@@ -374,35 +383,28 @@ public class PlayerController : NetworkBehaviour
 
         cinemachineTargetGroup = FindFirstObjectByType<CinemachineTargetGroup>();
         cinemachineTargetGroup.AddMember(transform, 1f, 1f); // Add player to Cinemachine Target Group
-
     }
-
-
 
     private void SetPlayerColor()
     {
-
-        ColorUtility.TryParseHtmlString(PlayerColors.playerColors[gameManager.GetPlayerColor(OwnerId)], out Color playerColor);
+        ColorUtility.TryParseHtmlString(
+            PlayerColors.playerColors[gameManager.GetPlayerColor(OwnerId)],
+            out Color playerColor
+        );
         GameObject graphicObject = transform.Find("GraphicalObject").gameObject;
         graphicObject.GetComponent<SpriteRenderer>().color = playerColor;
 
-        ColorUtility.TryParseHtmlString(PlayerColors.tongueColors[gameManager.GetPlayerColor(OwnerId)], out Color tongueColor);
+        ColorUtility.TryParseHtmlString(
+            PlayerColors.tongueColors[gameManager.GetPlayerColor(OwnerId)],
+            out Color tongueColor
+        );
 
         tongue.gameObject.GetComponent<LineRenderer>().colorGradient = new Gradient
         {
-            colorKeys = new GradientColorKey[]
-            {
-                new GradientColorKey(tongueColor, 1f)
-            },
-            alphaKeys = new GradientAlphaKey[]
-            {
-                new GradientAlphaKey(1f, 1f)
-            }
+            colorKeys = new GradientColorKey[] { new GradientColorKey(tongueColor, 1f) },
+            alphaKeys = new GradientAlphaKey[] { new GradientAlphaKey(1f, 1f) },
         };
-
     }
-
-
 
     //[ServerRpc]
     //private void AddPlayer()

@@ -1,12 +1,11 @@
+using System.Collections;
 using FishNet.Managing;
 using FishNet.Object;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerMovement : NetworkBehaviour
 {
-
     [Header("Movement Settings")]
     public float moveSpeed = 5f;
     public float hangMoveSpeed = 15f;
@@ -36,50 +35,103 @@ public class PlayerMovement : NetworkBehaviour
 
     // The object being grappled to, if any
     public GameObject grappleObject;
+
     // Offset from the grapple object's position to the grapple point
     public Vector2 grappleOffset;
+
     // The last object grappled to.
     public Vector2 lastGrapplePoint;
 
-
     public Tongue tongue;
 
-    [SerializeField] public Collider2D[] playerColliders;
+    [SerializeField]
+    public Collider2D[] playerColliders;
 
     public PlayerInput playerInput;
-    [SerializeField] public float popupForce = 3f;
+
+    [SerializeField]
+    public float popupForce = 3f;
     private float lastGrappleTime = -10f;
-    [SerializeField] private float grappleCooldown = 0.25f;
-    [SerializeField] public float maxDistance = 10f;
-    [SerializeField] private float minDistance = 1f;
-    [SerializeField] public float launchSpeed = 1f;
-    [SerializeField] public float hangDistance = 2f;
-    [SerializeField] private float minPopupDistance = 1.25f;
+
+    [SerializeField]
+    private float grappleCooldown = 0.25f;
+
+    [SerializeField]
+    public float maxDistance = 10f;
+
+    [SerializeField]
+    private float minDistance = 1f;
+
+    [SerializeField]
+    public float launchSpeed = 1f;
+
+    [SerializeField]
+    public float hangDistance = 2f;
+
+    [SerializeField]
+    private float minPopupDistance = 1.25f;
     private int terrainLayerNumber = 3;
     private int playersLayerNumber = 7;
     GameObject KBMIcons;
     GameObject GamepadIcons;
 
-
     public void Start()
     {
-
         spawnPoint = GameObject.Find("Spawn").transform;
         transform.position = spawnPoint.position;
         uiController = FindFirstObjectByType<UIController>();
         KBMIcons = GameObject.Find("KBMIcons");
         GamepadIcons = GameObject.Find("GamepadIcons");
-
-
     }
 
     public override void OnStartClient()
     {
+        base.OnStartClient();
+        Debug.Log($"[PlayerMovement] OnStartClient called. IsOwner: {IsOwner}, OwnerId: {OwnerId}");
+
         if (IsOwner)
         {
+            Debug.Log("[PlayerMovement] Enabling PlayerInput for owner");
             playerInput.enabled = true;
-            StartCoroutine(WaitForUIController());
 
+            // Explicitly enable the actions (WebGL fix)
+            if (playerInput.actions != null)
+            {
+                playerInput.actions.Enable();
+                Debug.Log("[PlayerMovement] Manually enabled Input Actions");
+            }
+
+#if UNITY_WEBGL
+            // Force Keyboard&Mouse control scheme (WebGL fix)
+            playerInput.SwitchCurrentControlScheme(
+                "Keyboard&Mouse",
+                Keyboard.current,
+                Mouse.current
+            );
+            Debug.Log(
+                $"[PlayerMovement] Switched to control scheme: {playerInput.currentControlScheme}"
+            );
+#endif
+
+            // Add these diagnostic logs:
+            Debug.Log($"[PlayerMovement] PlayerInput.enabled: {playerInput.enabled}");
+            Debug.Log($"[PlayerMovement] PlayerInput.actions: {playerInput.actions}");
+            Debug.Log(
+                $"[PlayerMovement] PlayerInput.actions.enabled: {playerInput.actions?.enabled}"
+            );
+            Debug.Log(
+                $"[PlayerMovement] PlayerInput.currentActionMap: {playerInput.currentActionMap}"
+            );
+            Debug.Log(
+                $"[PlayerMovement] PlayerInput.currentControlScheme: {playerInput.currentControlScheme}"
+            );
+
+            StartCoroutine(WaitForUIController());
+        }
+        else
+        {
+            Debug.Log("[PlayerMovement] Not owner, PlayerInput stays disabled");
+            playerInput.enabled = false;
         }
     }
 
@@ -89,19 +141,24 @@ public class PlayerMovement : NetworkBehaviour
             yield return null;
 
         uiController = FindFirstObjectByType<UIController>();
-
     }
-
 
     private void Update()
     {
+        if (IsOwner && !playerInput.enabled)
+        {
+            Debug.LogWarning(
+                "[PlayerMovement] PlayerInput was disabled for owner - enabling it now (WebGL timing fix)"
+            );
+            playerInput.enabled = true;
+        }
 
         if (IsOwner && playerInput.currentControlScheme != "Gamepad" && !uiController.isPaused)
         {
-            // aim grapple on kbm
-            Vector2 lookPosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            Vector2 lookPosition = Camera.main.ScreenToWorldPoint(
+                Mouse.current.position.ReadValue()
+            );
             aimDirection = (lookPosition - (Vector2)tongue.transform.position).normalized;
-
         }
         if (uiController.isPaused)
         {
@@ -122,38 +179,43 @@ public class PlayerMovement : NetworkBehaviour
 
     private void CheckIcons()
     {
-
-        if (KBMIcons != null && GamepadIcons != null && playerInput.currentControlScheme != "Gamepad")
+        if (
+            KBMIcons != null
+            && GamepadIcons != null
+            && playerInput.currentControlScheme != "Gamepad"
+        )
         {
             KBMIcons.SetActive(true);
             GamepadIcons.SetActive(false);
             Cursor.visible = true;
-
         }
-        else if (KBMIcons != null && GamepadIcons != null && playerInput.currentControlScheme == "Gamepad")
+        else if (
+            KBMIcons != null
+            && GamepadIcons != null
+            && playerInput.currentControlScheme == "Gamepad"
+        )
         {
             KBMIcons.SetActive(false);
             GamepadIcons.SetActive(true);
             Cursor.visible = false;
         }
-
-
-
     }
+
     private void FixedUpdate()
     {
+        if (!IsOwner)
+            return;
+
         if (CheckOutOfBounds())
         {
             if (spawnPoint == null)
             {
                 spawnPoint = GameObject.Find("Spawn").transform;
             }
-            // If player is out of bounds, teleport them to the spawn point
             teleport = spawnPoint.position;
             ServerRpcPlaySoundEffect("death");
         }
     }
-
 
     public void OnLook(InputAction.CallbackContext context)
     {
@@ -177,7 +239,6 @@ public class PlayerMovement : NetworkBehaviour
             //    moveInput = Vector2.zero;
 
             //}
-
         }
         else
         {
@@ -209,7 +270,6 @@ public class PlayerMovement : NetworkBehaviour
             //}
 
             moveInput = context.ReadValue<Vector2>();
-
         }
         else
         {
@@ -217,15 +277,13 @@ public class PlayerMovement : NetworkBehaviour
             if (context.ReadValue<Vector2>().normalized != Vector2.zero)
             {
                 aimDirection = (context.ReadValue<Vector2>().normalized);
-
             }
-
         }
-
     }
 
     public void OnGrapple(InputAction.CallbackContext context)
     {
+
         if (uiController.isPaused)
             return;
 
@@ -241,11 +299,19 @@ public class PlayerMovement : NetworkBehaviour
 
     private void TryGrapple()
     {
+        if (!IsOwner)
+            return;
+
         if (Time.time - lastGrappleTime >= grappleCooldown)
         {
             lastGrappleTime = Time.time;
             ToggleColliders(false);
-            RaycastHit2D _hit = Physics2D.Raycast(tongue.transform.position, aimDirection, maxDistance, hitLayers);
+            RaycastHit2D _hit = Physics2D.Raycast(
+                tongue.transform.position,
+                aimDirection,
+                maxDistance,
+                hitLayers
+            );
             ToggleColliders(true);
             ServerRpcPlaySoundEffect("whoosh");
             if (_hit.transform != null)
@@ -256,25 +322,21 @@ public class PlayerMovement : NetworkBehaviour
             {
                 OnGrappleMiss();
             }
-
         }
     }
 
     private void StopGrapple()
     {
-
         lastGrappleTime = Time.time;
         grappleOffset = Vector2.zero;
         grappleObject = null;
         stopGrapple = true;
         tongue.ResetTongueWaves();
         tongue.SetTongueTargetDefault();
-
     }
 
     [ServerRpc(RunLocally = true)]
     public void ServerRpcPlaySoundEffect(string clip)
-
     {
         if (IsOwner)
         {
@@ -285,13 +347,11 @@ public class PlayerMovement : NetworkBehaviour
 
     [ObserversRpc]
     public void ObserversRpcPlaySoundEffect(string clip)
-
     {
         if (IsOwner)
             return; // Don't play sound on the owner to avoid double sound effects
         PlaySoundEffect(clip);
     }
-
 
     public void PlaySoundEffect(string clip)
     {
@@ -329,7 +389,6 @@ public class PlayerMovement : NetworkBehaviour
         tongue.ResetTongueWaves();
         float distance = Vector2.Distance(_hit.point, tongue.transform.position);
 
-
         if (_hit.transform.gameObject.layer == terrainLayerNumber && distance <= minPopupDistance)
         {
             // If the distance is less than the minimum, popup the player
@@ -337,11 +396,12 @@ public class PlayerMovement : NetworkBehaviour
             popup = true;
             lastGrapplePoint = _hit.point;
             tongue.SetTongueTargetHit();
-
         }
-        else if (_hit.transform.gameObject.layer == terrainLayerNumber || _hit.transform.gameObject.layer == playersLayerNumber)
+        else if (
+            _hit.transform.gameObject.layer == terrainLayerNumber
+            || _hit.transform.gameObject.layer == playersLayerNumber
+        )
         {
-
             // Grapple to terrain or player
             // Get the local position of the hit point on the hit object, so if the object moves, the grapple point will still be correct
             ServerRpcPlaySoundEffect("squelch");
@@ -350,7 +410,6 @@ public class PlayerMovement : NetworkBehaviour
             lastGrapplePoint = (Vector2)grappleObject.transform.TransformPoint(grappleOffset);
             startGrapple = true;
             tongue.SetTongueTargetHit();
-
         }
     }
 
@@ -376,7 +435,6 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
-
     public static string GetHierarchyPath(GameObject obj)
     {
         if (obj == null)
@@ -391,17 +449,19 @@ public class PlayerMovement : NetworkBehaviour
             current = current.parent;
         }
         return path;
-
     }
 
     public static GameObject FindByHierarchyPath(string path)
     {
-        if (string.IsNullOrEmpty(path)) return null;
+        if (string.IsNullOrEmpty(path))
+            return null;
 
         string[] names = path.Split('/');
 
         // Start by finding the root object(s) (those without a parent)
-        GameObject[] rootObjects = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+        GameObject[] rootObjects = UnityEngine
+            .SceneManagement.SceneManager.GetActiveScene()
+            .GetRootGameObjects();
 
         GameObject current = null;
         foreach (var root in rootObjects)
@@ -412,7 +472,8 @@ public class PlayerMovement : NetworkBehaviour
                 break;
             }
         }
-        if (current == null) return null;
+        if (current == null)
+            return null;
 
         // Traverse down the hierarchy
         for (int i = 1; i < names.Length; i++)
@@ -425,6 +486,4 @@ public class PlayerMovement : NetworkBehaviour
         }
         return current;
     }
-
-
 }

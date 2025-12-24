@@ -1630,8 +1630,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4eb4843bae7d24943842ea23130dcd55, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineGroupFraming
-  FramingMode: 2
-  FramingSize: 0.66
+  FramingMode: 0
+  FramingSize: 1.392
   CenterOffset: {x: 0, y: 0}
   Damping: 2
   SizeAdjustment: 2
@@ -2322,6 +2322,14 @@ PrefabInstance:
       propertyPath: _networkManager
       value: 
       objectReference: {fileID: 8700082347466042942}
+    - target: {fileID: 4605627603994074384, guid: fa8b24fe1d535c543858f728e1b456e7, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4828694721581224700, guid: fa8b24fe1d535c543858f728e1b456e7, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7513430065529904482, guid: fa8b24fe1d535c543858f728e1b456e7, type: 3}
       propertyPath: m_Name
       value: PauseMenu

@@ -977,7 +977,7 @@ MonoBehaviour:
     m_ActionId: 1520eef1-3c8a-4816-a1f8-626051b93eef
     m_ActionName: 'UI/PreviousColor[/Keyboard/q]'
   m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
+  m_DefaultControlScheme: Keyboard&Mouse
   m_DefaultActionMap: Player
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
