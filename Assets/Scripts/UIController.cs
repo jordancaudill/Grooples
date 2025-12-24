@@ -33,6 +33,7 @@ public class UIController : MonoBehaviour
     private GameManager gameManager;
     public GameObject keyboardIcons;
     public GameObject exitButton;
+    public GameObject copyButton;
     public GameObject gamepadIcons;
     public NetworkManager _networkManager;
     public PlayerInput playerInput;
@@ -67,6 +68,10 @@ public class UIController : MonoBehaviour
         if (exitButton != null)
         {
             exitButton.SetActive(false);
+        }
+        if (copyButton != null)
+        {
+            copyButton.SetActive(false);
         }
 #endif
     }

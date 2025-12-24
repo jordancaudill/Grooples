@@ -1493,6 +1493,10 @@ PrefabInstance:
       propertyPath: _latencySimulator._enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2240173048763132163, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
+      propertyPath: _latencySimulator._simulateHost
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4393252310584637057, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -2413,7 +2417,7 @@ MonoBehaviour:
   m_HeartbeatTimeoutMS: 500
   m_ConnectTimeoutMS: 1000
   m_MaxConnectAttempts: 60
-  m_DisconnectTimeoutMS: 30000
+  m_DisconnectTimeoutMS: 5000
   ConnectionData:
     Address: 127.0.0.1
     Port: 7777
@@ -4727,6 +4731,7 @@ MonoBehaviour:
   gameManagerPrefab: {fileID: 6792337606350198594, guid: 0bff442c82dd4a74db61ea41cb7182d0, type: 3}
   keyboardIcons: {fileID: 1590586877}
   exitButton: {fileID: 1188428721}
+  copyButton: {fileID: 839074640}
   gamepadIcons: {fileID: 524426525}
   _networkManager: {fileID: 550754280}
   playerInput: {fileID: 1419158500}
