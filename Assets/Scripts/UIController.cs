@@ -22,6 +22,7 @@ public class UIController : MonoBehaviour
     public GameObject copyCodeInputField;
     public GameObject enterCodeInputField;
     public GameObject pauseCanvas;
+    public Slider volumeSlider;
     public GameObject mainMenuButtons;
     public GameObject connectedButtons;
     public GameObject unconnectedButtons;
@@ -62,6 +63,7 @@ public class UIController : MonoBehaviour
         sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
         SetConnectedButtonStates();
         SetCopyableJoinCode(gameManager?.joinCode?.Value);
+        volumeSlider.value = AudioListener.volume;
 
 #if UNITY_WEBGL
         // Disable exit and copy buttons on WebGL
@@ -218,6 +220,11 @@ public class UIController : MonoBehaviour
     {
         pauseCanvas.SetActive(true);
         isPaused = true;
+    }
+
+    public void OnVolumeChange()
+    {
+        AudioListener.volume = volumeSlider.value;
     }
 
     public void HostGame()
