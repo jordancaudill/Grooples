@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Linq;
 using FishNet.Component.Spawning;
 using FishNet.Connection;
@@ -6,6 +7,7 @@ using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
+using Unity.Cinemachine;
 using UnityEngine;
 
 public class Player
@@ -24,6 +26,8 @@ public class GameManager : NetworkBehaviour
     public readonly SyncVar<string> joinCode = new SyncVar<string>();
 
     private SceneManager sceneManager;
+
+    private CinemachineTargetGroup cinemachineTargetGroup;
 
     void Start()
     {
@@ -48,6 +52,11 @@ public class GameManager : NetworkBehaviour
         sceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
     }
 
+    public override void OnStartClient()
+    {
+        StartCoroutine(WaitForCinemachineTargetGroup());
+    }
+
     public void SetJoinCode(string code)
     {
         joinCode.Value = code;
@@ -58,6 +67,8 @@ public class GameManager : NetworkBehaviour
         // Spawn player prefab when the scene is set
         if (args.LoadedScenes.Length > 0)
         {
+            StartCoroutine(WaitForCinemachineTargetGroup());
+
             PlayerSpawner playerSpawner = FindFirstObjectByType<PlayerSpawner>();
 
             if (args.LoadedScenes[0].name == "Lobby")
@@ -75,6 +86,27 @@ public class GameManager : NetworkBehaviour
 
                 SpawnPlayerPrefabs();
             }
+        }
+    }
+
+    IEnumerator WaitForCinemachineTargetGroup()
+    {
+        while (FindFirstObjectByType<CinemachineTargetGroup>() == null)
+            yield return null;
+
+        cinemachineTargetGroup = FindFirstObjectByType<CinemachineTargetGroup>();
+        // cinemachineTargetGroup.AddMember(transform, 1f, 1f); // Add player to Cinemachine Target
+        // Add the spawn point and finish point to the cinemachine target group
+        
+        // Wait 2 seconds
+        yield return new WaitForSeconds(2f);
+        
+        GameObject spawn = GameObject.Find("Spawn");
+        GameObject finish = GameObject.Find("Finish");
+        if (spawn != null && finish != null)
+        {
+            cinemachineTargetGroup.AddMember(spawn.transform, 1f, 1f);
+            cinemachineTargetGroup.AddMember(finish.transform, 1f, 1f);
         }
     }
 

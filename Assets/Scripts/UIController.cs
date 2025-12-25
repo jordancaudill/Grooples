@@ -63,10 +63,15 @@ public class UIController : MonoBehaviour
         sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
         SetConnectedButtonStates();
         SetCopyableJoinCode(gameManager?.joinCode?.Value);
-        volumeSlider.value = AudioListener.volume;
+
+#if !UNITY_WEBGL
+        if (volumeSlider != null)
+        {
+            volumeSlider.value = AudioListener.volume;
+        }
+#endif
 
 #if UNITY_WEBGL
-        // Disable exit and copy buttons on WebGL
         if (exitButton != null)
         {
             exitButton.SetActive(false);
@@ -224,7 +229,10 @@ public class UIController : MonoBehaviour
 
     public void OnVolumeChange()
     {
-        AudioListener.volume = volumeSlider.value;
+        if (volumeSlider != null)
+        {
+            AudioListener.volume = volumeSlider.value;
+        }
     }
 
     public void HostGame()

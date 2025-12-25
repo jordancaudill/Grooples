@@ -7,7 +7,6 @@ using FishNet.Object.Prediction;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using GameKit.Dependencies.Utilities;
-using Unity.Cinemachine;
 using UnityEngine;
 
 public class PlayerController : NetworkBehaviour
@@ -24,7 +23,6 @@ public class PlayerController : NetworkBehaviour
     private bool localStopGrapple = false;
     private GameManager gameManager;
     private SceneManager sceneManager;
-    private CinemachineTargetGroup cinemachineTargetGroup;
 
     //private void OnPlayerNumberChanged(int previous, int next, bool asServer)
     //{
@@ -135,7 +133,6 @@ public class PlayerController : NetworkBehaviour
         gameManager = FindFirstObjectByType<GameManager>();
         sceneManager = FindFirstObjectByType<SceneManager>();
         sceneManager.OnLoadStart += SceneManager_OnLoadStart;
-        sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
         SetPlayerColor();
     }
 
@@ -147,19 +144,11 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    private void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)
-    {
-        if (args.LoadedScenes.Length > 0)
-        {
-            StartCoroutine(WaitForCinemachineTargetGroup());
-        }
-    }
 
     private void OnDestroy()
     {
         ObjectCaches<PredictionRigidbody2D>.StoreAndDefault(ref PredictionRigidbody);
         sceneManager.OnLoadStart -= SceneManager_OnLoadStart;
-        sceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
     }
 
     public override void OnStartNetwork()
@@ -371,19 +360,6 @@ public class PlayerController : NetworkBehaviour
         PredictionRigidbody.Reconcile(data.PredictionRigidbody);
     }
 
-    public override void OnStartClient()
-    {
-        StartCoroutine(WaitForCinemachineTargetGroup());
-    }
-
-    IEnumerator WaitForCinemachineTargetGroup()
-    {
-        while (FindFirstObjectByType<CinemachineTargetGroup>() == null)
-            yield return null;
-
-        cinemachineTargetGroup = FindFirstObjectByType<CinemachineTargetGroup>();
-        cinemachineTargetGroup.AddMember(transform, 1f, 1f); // Add player to Cinemachine Target Group
-    }
 
     private void SetPlayerColor()
     {
