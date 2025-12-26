@@ -19,6 +19,7 @@ public class PlayerController : NetworkBehaviour
     public SpringJoint2D springJoint2D;
     private GameObject localGrappleObject;
     private bool localPopup = false;
+    private bool localJump = false;
     private bool localStartGrapple = false;
     private bool localStopGrapple = false;
     private GameManager gameManager;
@@ -30,6 +31,10 @@ public class PlayerController : NetworkBehaviour
     //}
 
     public PredictionRigidbody2D PredictionRigidbody;
+
+    [Header("Ground Check")]
+    public float groundCheckDistance = 0.1f;
+    public LayerMask groundLayer;
 
     public struct ReplicateData : IReplicateData
     {
@@ -45,6 +50,9 @@ public class PlayerController : NetworkBehaviour
         // The point the player is popping from
         public bool Popup;
 
+        // Jump input
+        public bool Jump;
+
         // the network id of the object being grappled to, if any
         public int GrappleObjectId;
 
@@ -58,6 +66,7 @@ public class PlayerController : NetworkBehaviour
             Vector2 teleport,
             Vector2 aim,
             bool popup,
+            bool jump,
             int grappleObjectId,
             Vector2 grappleOffset,
             bool startGrapple,
@@ -69,6 +78,7 @@ public class PlayerController : NetworkBehaviour
             Teleport = teleport;
             Aim = aim;
             Popup = popup;
+            Jump = jump;
             GrappleObjectId = grappleObjectId;
             GrappleOffset = grappleOffset;
             StartGrapple = startGrapple;
@@ -95,6 +105,14 @@ public class PlayerController : NetworkBehaviour
             return found.gameObject;
         }
         return null;
+    }
+
+    private bool IsGrounded()
+    {
+        Vector2 position = rb.position;
+        Vector2 direction = Vector2.down;
+        RaycastHit2D hit = Physics2D.Raycast(position, direction, groundCheckDistance, groundLayer);
+        return hit.collider != null;
     }
 
     public struct ReconcileData : IReconcileData
@@ -144,7 +162,6 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-
     private void OnDestroy()
     {
         ObjectCaches<PredictionRigidbody2D>.StoreAndDefault(ref PredictionRigidbody);
@@ -173,6 +190,12 @@ public class PlayerController : NetworkBehaviour
         {
             localPopup = true;
             playerMovement.popup = false; // Reset popup after using it
+        }
+        // For single-frame inputs, capture the input in Update()
+        if (!localJump && playerMovement.jump)
+        {
+            localJump = true;
+            playerMovement.jump = false; // Reset jump after using it
         }
         // For single-frame inputs, capture the input in Update()
         if (!localStartGrapple && playerMovement.startGrapple)
@@ -214,6 +237,7 @@ public class PlayerController : NetworkBehaviour
             playerMovement.teleport,
             playerMovement.aimDirection,
             localPopup, // use the stored value
+            localJump, // use the stored value
             grappleObjectNetworkId,
             playerMovement.grappleOffset,
             localStartGrapple, // use the stored value
@@ -222,6 +246,7 @@ public class PlayerController : NetworkBehaviour
 
         // Reset local single-frame inputs
         localPopup = false;
+        localJump = false;
         localStartGrapple = false;
         localStopGrapple = false;
         return md;
@@ -260,18 +285,50 @@ public class PlayerController : NetworkBehaviour
 
         if (data.Move != Vector2.zero)
         {
-
-            float speed =
-                localGrappleObject != null
-                    ? playerMovement.hangMoveSpeed
-                    : playerMovement.moveSpeed;
-            PredictionRigidbody.AddForce(new Vector2(data.Move.x * speed, 0), ForceMode2D.Force);
+            if (localGrappleObject == null)
+            {
+                bool isGrounded = IsGrounded();
+                if (isGrounded)
+                {
+                    Vector2 currentVelocity = rb.linearVelocity;
+                    currentVelocity.x = data.Move.x * playerMovement.moveSpeed;
+                    PredictionRigidbody.Velocity(currentVelocity);
+                }
+                else
+                {
+                    PredictionRigidbody.AddForce(
+                        new Vector2(data.Move.x * playerMovement.moveSpeed, 0),
+                        ForceMode2D.Force
+                    );
+                }
+            }
+            else
+            {
+                PredictionRigidbody.AddForce(
+                    new Vector2(data.Move.x * playerMovement.hangMoveSpeed, 0),
+                    ForceMode2D.Force
+                );
+            }
+        }
+        else if (localGrappleObject == null && IsGrounded())
+        {
+            Vector2 currentVelocity = rb.linearVelocity;
+            currentVelocity.x = 0;
+            PredictionRigidbody.Velocity(currentVelocity);
         }
 
-        if (data.Popup)
+        // if (data.Popup)
+        // {
+        //     PredictionRigidbody.AddForce(
+        //         data.Aim * -1 * playerMovement.popupForce,
+        //         ForceMode2D.Impulse
+        //     );
+        // }
+
+        if (data.Jump && IsGrounded())
         {
             PredictionRigidbody.AddForce(
-                data.Aim * -1 * playerMovement.popupForce,
+                Vector2.up * playerMovement.popupForce,
                 ForceMode2D.Impulse
             );
         }
@@ -359,7 +416,6 @@ public class PlayerController : NetworkBehaviour
         //values from data.
         PredictionRigidbody.Reconcile(data.PredictionRigidbody);
     }
-
 
     private void SetPlayerColor()
     {

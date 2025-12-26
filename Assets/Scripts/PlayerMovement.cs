@@ -30,6 +30,7 @@ public class PlayerMovement : NetworkBehaviour
     public Vector2 aimDirection;
     public Vector2 teleport;
     public bool popup;
+    public bool jump;
     public bool startGrapple = false;
     public bool stopGrapple = false;
 
@@ -294,6 +295,17 @@ public class PlayerMovement : NetworkBehaviour
         else if (context.canceled)
         {
             StopGrapple();
+        }
+    }
+
+    public void OnJump(InputAction.CallbackContext context)
+    {
+        if (uiController.isPaused)
+            return;
+
+        if (context.performed)
+        {
+            jump = true;
         }
     }
 

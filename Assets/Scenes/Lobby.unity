@@ -4721,6 +4721,7 @@ MonoBehaviour:
   copyCodeInputField: {fileID: 649584547}
   enterCodeInputField: {fileID: 514900974}
   pauseCanvas: {fileID: 0}
+  volumeSlider: {fileID: 0}
   mainMenuButtons: {fileID: 2133342917}
   connectedButtons: {fileID: 290891923}
   unconnectedButtons: {fileID: 2025724680}

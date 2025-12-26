@@ -672,6 +672,7 @@ GameObject:
   - component: {fileID: -4369470990084180759}
   - component: {fileID: 701968169404931231}
   - component: {fileID: 7110542255626972403}
+  - component: {fileID: 5098319320358546333}
   m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
@@ -775,6 +776,10 @@ MonoBehaviour:
   rb: {fileID: 5989748641023836935}
   tongue: {fileID: 3451043250967181955}
   springJoint2D: {fileID: 1848247816056139402}
+  groundCheckDistance: 1
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 8
 --- !u!231 &1848247816056139402
 SpringJoint2D:
   m_ObjectHideFlags: 0
@@ -822,7 +827,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!114 &1531998262079415352
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -893,7 +898,19 @@ MonoBehaviour:
     m_ActionId: 27c5f898-bc57-4ee1-8800-db469aca5fe3
     m_ActionName: 'Player/Crouch[/Keyboard/c]'
   - m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: -4369470990084180759}
+        m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
+        m_MethodName: OnJump
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_ActionId: f1ba0d36-48eb-4cd5-b651-1c94a6531f70
     m_ActionName: 'Player/Jump[/Keyboard/space]'
   - m_PersistentCalls:
@@ -1089,6 +1106,7 @@ MonoBehaviour:
   aimDirection: {x: 0, y: 0}
   teleport: {x: 0, y: 0}
   popup: 0
+  jump: 0
   startGrapple: 0
   stopGrapple: 0
   grappleObject: {fileID: 0}
@@ -1096,10 +1114,10 @@ MonoBehaviour:
   lastGrapplePoint: {x: 0, y: 0}
   tongue: {fileID: 3451043250967181955}
   playerColliders:
-  - {fileID: 701968169404931231}
+  - {fileID: 5098319320358546333}
   - {fileID: 1232718486844627212}
   playerInput: {fileID: 1531998262079415352}
-  popupForce: 15
+  popupForce: 10
   grappleCooldown: 0.25
   maxDistance: 9
   minDistance: 1
@@ -1113,7 +1131,7 @@ CircleCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5401303326408513776}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Density: 1
   m_Material: {fileID: 0}
@@ -1239,3 +1257,49 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!61 &5098319320358546333
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5401303326408513776}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0.0011793971, y: -0.10589713}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 0.92333335, y: 1.1188889}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 0.88323295, y: 0.8282057}
+  m_EdgeRadius: 0
