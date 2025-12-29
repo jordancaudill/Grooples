@@ -1,6 +1,6 @@
+using System.Collections;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,27 +10,25 @@ public class LobbyPlayer : NetworkBehaviour
     private GameObject lobbyPlayerGrid;
     public TextMeshProUGUI playerName;
     public Image playerImage;
-    private GameManager gameManager;
-
+    private MultiplayerManager multiplayerManager;
 
     public override void OnStartClient()
     {
-        StartCoroutine(WaitForGameManager());
+        StartCoroutine(WaitForMultiplayerManager());
     }
-
 
     private void OnDestroy()
     {
-        gameManager._players.OnChange -= OnPlayersChange;
+        multiplayerManager._players.OnChange -= OnPlayersChange;
     }
 
-    IEnumerator WaitForGameManager()
+    IEnumerator WaitForMultiplayerManager()
     {
-        while (FindFirstObjectByType<GameManager>() == null)
+        while (FindFirstObjectByType<MultiplayerManager>() == null)
             yield return null;
 
-        gameManager = FindFirstObjectByType<GameManager>();
-        gameManager._players.OnChange += OnPlayersChange;
+        multiplayerManager = FindFirstObjectByType<MultiplayerManager>();
+        multiplayerManager._players.OnChange += OnPlayersChange;
         lobbyPlayerGrid = GameObject.Find("PlayerGrid");
         if (lobbyPlayerGrid != null)
         {
@@ -49,27 +47,33 @@ public class LobbyPlayer : NetworkBehaviour
         SetInitialColor();
     }
 
-
     private void SetInitialColor()
     {
-        
-        ColorUtility.TryParseHtmlString(PlayerColors.playerColors[gameManager.GetPlayerColor(OwnerId)], out Color newPlayerColor);
+        ColorUtility.TryParseHtmlString(
+            PlayerColors.playerColors[multiplayerManager.GetPlayerColor(OwnerId)],
+            out Color newPlayerColor
+        );
         playerImage.color = newPlayerColor;
-
     }
 
     // Update the player image color when the player list changes
-    private void OnPlayersChange(SyncListOperation op, int index,
-    Player prev, Player next, bool asServer)
+    private void OnPlayersChange(
+        SyncListOperation op,
+        int index,
+        Player prev,
+        Player next,
+        bool asServer
+    )
     {
         if (op == SyncListOperation.Set && next != null && next.clientId == OwnerId && !asServer)
         {
             //print(next.clientId + " | " + next.color);
 
-            ColorUtility.TryParseHtmlString(PlayerColors.playerColors[next.color], out Color newPlayerColor);
+            ColorUtility.TryParseHtmlString(
+                PlayerColors.playerColors[next.color],
+                out Color newPlayerColor
+            );
             playerImage.color = newPlayerColor;
-           
         }
     }
-
 }

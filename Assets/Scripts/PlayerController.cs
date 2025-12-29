@@ -22,7 +22,7 @@ public class PlayerController : NetworkBehaviour
     private bool localJump = false;
     private bool localStartGrapple = false;
     private bool localStopGrapple = false;
-    private GameManager gameManager;
+    private MultiplayerManager multiplayerManager;
     private SceneManager sceneManager;
 
     //private void OnPlayerNumberChanged(int previous, int next, bool asServer)
@@ -148,7 +148,7 @@ public class PlayerController : NetworkBehaviour
 
     private void Start()
     {
-        gameManager = FindFirstObjectByType<GameManager>();
+        multiplayerManager = FindFirstObjectByType<MultiplayerManager>();
         sceneManager = FindFirstObjectByType<SceneManager>();
         sceneManager.OnLoadStart += SceneManager_OnLoadStart;
         SetPlayerColor();
@@ -420,14 +420,14 @@ public class PlayerController : NetworkBehaviour
     private void SetPlayerColor()
     {
         ColorUtility.TryParseHtmlString(
-            PlayerColors.playerColors[gameManager.GetPlayerColor(OwnerId)],
+            PlayerColors.playerColors[multiplayerManager.GetPlayerColor(OwnerId)],
             out Color playerColor
         );
         GameObject graphicObject = transform.Find("GraphicalObject").gameObject;
         graphicObject.GetComponent<SpriteRenderer>().color = playerColor;
 
         ColorUtility.TryParseHtmlString(
-            PlayerColors.tongueColors[gameManager.GetPlayerColor(OwnerId)],
+            PlayerColors.tongueColors[multiplayerManager.GetPlayerColor(OwnerId)],
             out Color tongueColor
         );
 

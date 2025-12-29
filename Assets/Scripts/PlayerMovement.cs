@@ -175,7 +175,6 @@ public class PlayerMovement : NetworkBehaviour
         }
 
         CheckIcons();
-
     }
 
     private void CheckIcons()
@@ -284,7 +283,6 @@ public class PlayerMovement : NetworkBehaviour
 
     public void OnGrapple(InputAction.CallbackContext context)
     {
-
         if (uiController.isPaused)
             return;
 

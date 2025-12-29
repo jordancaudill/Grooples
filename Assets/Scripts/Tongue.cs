@@ -1,5 +1,5 @@
-using FishNet.Object;
 using System;
+using FishNet.Object;
 using UnityEngine;
 
 public class Tongue : NetworkBehaviour
@@ -9,10 +9,20 @@ public class Tongue : NetworkBehaviour
     public AnimationCurve tongueAnimationCurve;
     public AnimationCurve tongueProgressionCurve;
 
-    [Range(0.01f, 4)][SerializeField] private float startTongueWaveSize = 2;
-    [Range(0, 50)][SerializeField] private float straightenLineSpeed = 5;
-    [SerializeField][Range(1, 50)] private float tongueProgressionSpeed = 1;
-    [SerializeField] private int tonguePrecisionPoints = 40;
+    [Range(0.01f, 4)]
+    [SerializeField]
+    private float startTongueWaveSize = 2;
+
+    [Range(0, 50)]
+    [SerializeField]
+    private float straightenLineSpeed = 5;
+
+    [SerializeField]
+    [Range(1, 50)]
+    private float tongueProgressionSpeed = 1;
+
+    [SerializeField]
+    private int tonguePrecisionPoints = 40;
     public float defaultTongueLength = 2f;
 
     private float tongueDrawTime = 0;
@@ -44,14 +54,14 @@ public class Tongue : NetworkBehaviour
 
     public void SetTongueTargetDefault()
     {
-        tongueTarget = (Vector2)transform.position + (playerMovement.aimDirection * defaultTongueLength);
+        tongueTarget =
+            (Vector2)transform.position + (playerMovement.aimDirection * defaultTongueLength);
     }
 
     public void SetTongueTargetNone()
     {
         tongueTarget = (Vector2)transform.position;
     }
-
 
     public void SetTongueTargetHit()
     {
@@ -62,26 +72,37 @@ public class Tongue : NetworkBehaviour
         if (playerMovement.grappleObject.layer == playersLayerNumber)
         {
             // grapple target is a player, so set the tongue target to be their GrapicalObject
-            GameObject graphicObject = playerMovement.grappleObject.transform.Find("GraphicalObject").gameObject;
-            tongueTarget = (Vector2)graphicObject.transform.TransformPoint(playerMovement.grappleOffset);
+            GameObject graphicObject = playerMovement
+                .grappleObject.transform.Find("GraphicalObject")
+                .gameObject;
+            tongueTarget = (Vector2)
+                graphicObject.transform.TransformPoint(playerMovement.grappleOffset);
         }
         else
         {
-            tongueTarget = (Vector2)playerMovement.grappleObject.transform.TransformPoint(playerMovement.grappleOffset);
+            tongueTarget = (Vector2)
+                playerMovement.grappleObject.transform.TransformPoint(playerMovement.grappleOffset);
         }
     }
 
     public void SetTongueTargetMiss()
     {
         ResetTongueWaves();
-        tongueTarget = (Vector2)transform.position + (playerMovement.aimDirection * playerMovement.maxDistance);
+        tongueTarget =
+            (Vector2)transform.position
+            + (playerMovement.aimDirection * playerMovement.maxDistance);
     }
 
     void DrawTongue()
     {
         if (!straightLine)
         {
-            if (Math.Abs(lineRenderer.GetPosition(tonguePrecisionPoints - 1).x - tongueTarget.x) <= 0.1f && Math.Abs(lineRenderer.GetPosition(tonguePrecisionPoints - 1).y - tongueTarget.y) <= 0.1f)
+            if (
+                Math.Abs(lineRenderer.GetPosition(tonguePrecisionPoints - 1).x - tongueTarget.x)
+                    <= 0.1f
+                && Math.Abs(lineRenderer.GetPosition(tonguePrecisionPoints - 1).y - tongueTarget.y)
+                    <= 0.1f
+            )
             {
                 straightLine = true;
             }
@@ -112,19 +133,33 @@ public class Tongue : NetworkBehaviour
         for (int i = 0; i < tonguePrecisionPoints; i++)
         {
             float delta = i / (tonguePrecisionPoints - 1f);
-            Vector2 offset = Vector2.Perpendicular(grappleDistanceVector).normalized * tongueAnimationCurve.Evaluate(delta) * tongueWaveSize;
-            Vector2 targetPosition, currentPosition;
+            Vector2 offset =
+                Vector2.Perpendicular(grappleDistanceVector).normalized
+                * tongueAnimationCurve.Evaluate(delta)
+                * tongueWaveSize;
+            Vector2 targetPosition,
+                currentPosition;
             if (playerMovement.grappleObject != null)
             {
                 // is grappling
                 targetPosition = Vector2.Lerp(transform.position, tongueTarget, delta) + offset;
-                currentPosition = Vector2.Lerp(transform.position, targetPosition, tongueProgressionCurve.Evaluate(tongueDrawTime) * tongueProgressionSpeed);
+                currentPosition = Vector2.Lerp(
+                    transform.position,
+                    targetPosition,
+                    tongueProgressionCurve.Evaluate(tongueDrawTime) * tongueProgressionSpeed
+                );
             }
             else
             {
                 // is not grappling
-                targetPosition = Vector2.Lerp(transform.position, playerMovement.lastGrapplePoint, delta) + offset;
-                currentPosition = Vector2.Lerp(targetPosition, tongueTarget, tongueProgressionCurve.Evaluate(tongueDrawTime) * tongueProgressionSpeed);
+                targetPosition =
+                    Vector2.Lerp(transform.position, playerMovement.lastGrapplePoint, delta)
+                    + offset;
+                currentPosition = Vector2.Lerp(
+                    targetPosition,
+                    tongueTarget,
+                    tongueProgressionCurve.Evaluate(tongueDrawTime) * tongueProgressionSpeed
+                );
             }
 
             lineRenderer.SetPosition(i, currentPosition);
@@ -140,6 +175,4 @@ public class Tongue : NetworkBehaviour
             lineRenderer.SetPosition(i, tongueTarget);
         }
     }
-
-
 }

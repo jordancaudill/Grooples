@@ -202,8 +202,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: LoadLevel
         m_Mode: 3
         m_Arguments:
@@ -335,8 +335,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: HideLevelPanel
         m_Mode: 1
         m_Arguments:
@@ -957,8 +957,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: HostGame
         m_Mode: 1
         m_Arguments:
@@ -1283,7 +1283,7 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: UIController, Assembly-CSharp
         m_MethodName: SetJoinCodeInput
         m_Mode: 5
@@ -1590,17 +1590,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 806349890}
   m_SourcePrefab: {fileID: 100100000, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
---- !u!114 &550754280 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7443408887813606050, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
-  m_PrefabInstance: {fileID: 548092385}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 806349868}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2c95dfde7d73b54dbbdc23155d35d36, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &610881273
 GameObject:
   m_ObjectHideFlags: 0
@@ -1822,8 +1811,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: LoadLevel
         m_Mode: 3
         m_Arguments:
@@ -1991,7 +1980,7 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: UIController, Assembly-CSharp
         m_MethodName: SetJoinCodeInput
         m_Mode: 5
@@ -2510,8 +2499,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: CopyJoinCodeToClipboard
         m_Mode: 1
         m_Arguments:
@@ -2779,8 +2768,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: ShowLevelPanel
         m_Mode: 1
         m_Arguments:
@@ -3593,8 +3582,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: LoadLevel
         m_Mode: 3
         m_Arguments:
@@ -3726,8 +3715,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: ExitGame
         m_Mode: 1
         m_Arguments:
@@ -4108,8 +4097,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: LoadLevel
         m_Mode: 3
         m_Arguments:
@@ -4695,50 +4684,15 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1419158498}
-  - component: {fileID: 1419158497}
   - component: {fileID: 1419158500}
+  - component: {fileID: 1419158501}
   m_Layer: 0
-  m_Name: UIController
+  m_Name: LobbyUIController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1419158497
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1419158496}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7322e2c07a77bc34a87a425ec4d3e38f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  levelPanel: {fileID: 536228500}
-  startGameButton: {fileID: 892753413}
-  copyCodeInputField: {fileID: 649584547}
-  enterCodeInputField: {fileID: 514900974}
-  pauseCanvas: {fileID: 0}
-  volumeSlider: {fileID: 0}
-  mainMenuButtons: {fileID: 2133342917}
-  connectedButtons: {fileID: 290891923}
-  unconnectedButtons: {fileID: 2025724680}
-  successScreen: {fileID: 0}
-  playerPrefab: {fileID: 0}
-  lobbyPlayerPrefab: {fileID: 2874564410142259269, guid: 9f09a62b763bcc64aa79dcca1a9a1c4c, type: 3}
-  lobbyPlayerGrid: {fileID: 1238357209}
-  gameManagerPrefab: {fileID: 6792337606350198594, guid: 0bff442c82dd4a74db61ea41cb7182d0, type: 3}
-  keyboardIcons: {fileID: 1590586877}
-  exitButton: {fileID: 1188428721}
-  copyButton: {fileID: 839074640}
-  gamepadIcons: {fileID: 524426525}
-  _networkManager: {fileID: 550754280}
-  playerInput: {fileID: 1419158500}
-  sceneManager: {fileID: 806349883}
-  levelCount: 5
-  isPaused: 0
 --- !u!4 &1419158498
 Transform:
   m_ObjectHideFlags: 0
@@ -4865,8 +4819,8 @@ MonoBehaviour:
     m_ActionName: UI/TrackedDeviceOrientation
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: OnNextColor
         m_Mode: 0
         m_Arguments:
@@ -4881,8 +4835,8 @@ MonoBehaviour:
     m_ActionName: 'UI/NextColor[/Keyboard/e,/XInputControllerWindows/rightShoulder]'
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: OnPreviousColor
         m_Mode: 0
         m_Arguments:
@@ -4900,6 +4854,28 @@ MonoBehaviour:
   m_DefaultActionMap: UI
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!114 &1419158501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1419158496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08ed38f0c414dde4d88e70592771d1ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LobbyUIController
+  levelPanel: {fileID: 536228500}
+  startGameButton: {fileID: 892753413}
+  copyCodeInputField: {fileID: 649584547}
+  enterCodeInputField: {fileID: 514900974}
+  mainMenuButtons: {fileID: 2133342917}
+  connectedButtons: {fileID: 290891923}
+  unconnectedButtons: {fileID: 2025724680}
+  exitButton: {fileID: 1188428721}
+  copyButton: {fileID: 839074640}
+  MultiplayerManagerPrefab: {fileID: 6927296791486640590, guid: 8d8279c7f594a904a8fb93d3dd7d231f, type: 3}
 --- !u!1 &1455519407
 GameObject:
   m_ObjectHideFlags: 0
@@ -5293,8 +5269,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: ConnectToJoinCode
         m_Mode: 1
         m_Arguments:
@@ -5698,8 +5674,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: LeaveParty
         m_Mode: 1
         m_Arguments:
@@ -5967,8 +5943,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1419158497}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+      - m_Target: {fileID: 1419158501}
+        m_TargetAssemblyTypeName: LobbyUIController, Assembly-CSharp
         m_MethodName: LoadLevel
         m_Mode: 3
         m_Arguments:
@@ -6553,5 +6529,5 @@ SceneRoots:
   m_Roots:
   - {fileID: 1058335459}
   - {fileID: 1307590752}
-  - {fileID: 1419158498}
   - {fileID: 548092385}
+  - {fileID: 1419158498}

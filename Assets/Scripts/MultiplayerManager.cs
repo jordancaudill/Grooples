@@ -16,40 +16,43 @@ public class Player
     public string color; // color name such as "pink"
 }
 
-public class GameManager : NetworkBehaviour
+public class MultiplayerManager : NetworkBehaviour
 {
+    public static MultiplayerManager Instance { get; private set; }
     public readonly SyncList<Player> _players = new SyncList<Player>();
-    private NetworkManager _networkManager;
     public NetworkObject playerPrefab;
     public NetworkObject playerLobbyPrefab;
     public int currentLevel = 1;
     public readonly SyncVar<string> joinCode = new SyncVar<string>();
-
-    private SceneManager sceneManager;
-
     private CinemachineTargetGroup cinemachineTargetGroup;
 
     void Start()
     {
-        _networkManager = FindFirstObjectByType<NetworkManager>();
-        _networkManager.ServerManager.OnRemoteConnectionState +=
-            ServerManager_OnRemoteConnectionState;
-        _networkManager.ServerManager.OnServerConnectionState +=
-            ServerManager_OnServerConnectionState;
-        _networkManager.ClientManager.OnAuthenticated += ClientManager_OnAuthenticated;
+        if (Instance != null && Instance != this)
+        {
+            Despawn();
+            return;
+        }
 
-        sceneManager = FindFirstObjectByType<SceneManager>();
-        sceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
+        Instance = this;
+
+        NetworkManager.ServerManager.OnRemoteConnectionState +=
+            ServerManager_OnRemoteConnectionState;
+        NetworkManager.ServerManager.OnServerConnectionState +=
+            ServerManager_OnServerConnectionState;
+        NetworkManager.ClientManager.OnAuthenticated += ClientManager_OnAuthenticated;
+
+        SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
     }
 
     private void OnDestroy()
     {
-        _networkManager.ServerManager.OnRemoteConnectionState -=
+        NetworkManager.ServerManager.OnRemoteConnectionState -=
             ServerManager_OnRemoteConnectionState;
-        _networkManager.ServerManager.OnServerConnectionState -=
+        NetworkManager.ServerManager.OnServerConnectionState -=
             ServerManager_OnServerConnectionState;
-        _networkManager.ClientManager.OnAuthenticated -= ClientManager_OnAuthenticated;
-        sceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
+        NetworkManager.ClientManager.OnAuthenticated -= ClientManager_OnAuthenticated;
+        SceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
     }
 
     public override void OnStartClient()
@@ -95,12 +98,11 @@ public class GameManager : NetworkBehaviour
             yield return null;
 
         cinemachineTargetGroup = FindFirstObjectByType<CinemachineTargetGroup>();
-        // cinemachineTargetGroup.AddMember(transform, 1f, 1f); // Add player to Cinemachine Target
+
         // Add the spawn point and finish point to the cinemachine target group
-        
         // Wait 2 seconds
         yield return new WaitForSeconds(2f);
-        
+
         GameObject spawn = GameObject.Find("Spawn");
         GameObject finish = GameObject.Find("Finish");
         if (spawn != null && finish != null)
@@ -146,11 +148,11 @@ public class GameManager : NetworkBehaviour
             //playerObject.GetComponent<PlayerMovement>().clientId = player.clientId; // Set clientId on the player object
             //playerObject.GetComponent<PlayerMovement>().color = player.color; // Set color on the player object
             // Get the client connection for the player
-            NetworkConnection conn = _networkManager
+            NetworkConnection conn = NetworkManager
                 .ServerManager.Clients.First(c => c.Key == player.clientId)
                 .Value;
 
-            _networkManager.ServerManager.Spawn(playerObject, conn);
+            NetworkManager.ServerManager.Spawn(playerObject, conn);
         }
     }
 
@@ -164,11 +166,11 @@ public class GameManager : NetworkBehaviour
             //playerObject.GetComponent<PlayerMovement>().clientId = player.clientId; // Set clientId on the player object
             //playerObject.GetComponent<PlayerMovement>().color = player.color; // Set color on the player object
             // Get the client connection for the player
-            NetworkConnection conn = _networkManager
+            NetworkConnection conn = NetworkManager
                 .ServerManager.Clients.First(c => c.Key == player.clientId)
                 .Value;
 
-            _networkManager.ServerManager.Spawn(playerObject, conn);
+            NetworkManager.ServerManager.Spawn(playerObject, conn);
         }
     }
 

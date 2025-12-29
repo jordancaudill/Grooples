@@ -1,12 +1,12 @@
-using FishNet.Managing;
-using FishNet.Object;
 using System.Collections;
 using System.Collections.Generic;
+using FishNet.Managing;
+using FishNet.Object;
 using UnityEngine;
 
 public class Finish : NetworkBehaviour
 {
-    private GameManager gameManager;
+    private MultiplayerManager multiplayerManager;
     private HashSet<PlayerController> playersInFinish = new HashSet<PlayerController>();
     private UIController uiController;
     private bool isFinished = false;
@@ -21,10 +21,9 @@ public class Finish : NetworkBehaviour
     {
         uiController = FindFirstObjectByType<UIController>();
 
-        gameManager = FindFirstObjectByType<GameManager>();
+        multiplayerManager = FindFirstObjectByType<MultiplayerManager>();
 
         _networkManager = FindFirstObjectByType<NetworkManager>();
-
     }
 
     private void FixedUpdate()
@@ -41,7 +40,6 @@ public class Finish : NetworkBehaviour
         if (player != null)
         {
             playersInFinish.Add(player);
-
         }
     }
 
@@ -55,7 +53,7 @@ public class Finish : NetworkBehaviour
 
     private void CheckForPlayersOnPlatform()
     {
-        if (playersInFinish.Count == gameManager._players.Count)
+        if (playersInFinish.Count == multiplayerManager._players.Count)
         {
             timeOnPlatform += Time.fixedDeltaTime;
         }
@@ -79,13 +77,17 @@ public class Finish : NetworkBehaviour
     private void CheckForFinish()
     {
         // Check for final finish condition
-        if (_networkManager.IsServerStarted && !isFinished && playersInFinish.Count == gameManager._players.Count && timeOnPlatform >= timeToWin)
+        if (
+            _networkManager.IsServerStarted
+            && !isFinished
+            && playersInFinish.Count == multiplayerManager._players.Count
+            && timeOnPlatform >= timeToWin
+        )
         {
             isFinished = true;
             ObserverRpcShowSuccessScreen();
             // Wait 5 seconds then load the next level
             StartCoroutine(LoadNextLevelAfterDelay(5f));
-
         }
     }
 
@@ -100,7 +102,6 @@ public class Finish : NetworkBehaviour
     private void ObserverRpcShowSuccessScreen()
     {
         uiController.ShowSuccessScreen();
-
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -111,5 +112,4 @@ public class Finish : NetworkBehaviour
             playersInFinish.Remove(player);
         }
     }
-
 }
