@@ -345,21 +345,20 @@ public class PlayerMovement : NetworkBehaviour
         tongue.SetTongueTargetDefault();
     }
 
+    ///// Good example of "run on all" rpc pattern
     [ServerRpc(RunLocally = true)]
     public void ServerRpcPlaySoundEffect(string clip)
     {
-        if (IsOwner)
+        PlaySoundEffect(clip);
+        if (IsServer)
         {
-            PlaySoundEffect(clip);
+            ObserversRpcPlaySoundEffect(clip);
         }
-        ObserversRpcPlaySoundEffect(clip);
     }
 
-    [ObserversRpc]
+    [ObserversRpc(ExcludeOwner = true)]
     public void ObserversRpcPlaySoundEffect(string clip)
     {
-        if (IsOwner)
-            return; // Don't play sound on the owner to avoid double sound effects
         PlaySoundEffect(clip);
     }
 
@@ -392,6 +391,8 @@ public class PlayerMovement : NetworkBehaviour
         }
         audioSource.PlayOneShot(clipToPlay);
     }
+
+    /////////////////
 
     void OnGrappleHit(RaycastHit2D _hit)
     {
