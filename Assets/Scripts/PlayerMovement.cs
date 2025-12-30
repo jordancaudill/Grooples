@@ -345,7 +345,21 @@ public class PlayerMovement : NetworkBehaviour
         tongue.SetTongueTargetDefault();
     }
 
-    ///// Good example of "run on all" rpc pattern
+    /// Good example of non-eager "run on all" rpc pattern
+    // [ServerRpc]
+    // public void ServerRpcPlaySoundEffect(string clip)
+    // {
+    //     ObserversRpcPlaySoundEffect(clip);
+    // }
+
+    // [ObserversRpc]
+    // public void ObserversRpcPlaySoundEffect(string clip)
+    // {
+    //     PlaySoundEffect(clip);
+    // }
+    ///////////////
+
+    ///// Good example of eager "run on all" rpc pattern
     [ServerRpc(RunLocally = true)]
     public void ServerRpcPlaySoundEffect(string clip)
     {
@@ -361,6 +375,8 @@ public class PlayerMovement : NetworkBehaviour
     {
         PlaySoundEffect(clip);
     }
+
+    /////////////////
 
     public void PlaySoundEffect(string clip)
     {
@@ -391,8 +407,6 @@ public class PlayerMovement : NetworkBehaviour
         }
         audioSource.PlayOneShot(clipToPlay);
     }
-
-    /////////////////
 
     void OnGrappleHit(RaycastHit2D _hit)
     {
