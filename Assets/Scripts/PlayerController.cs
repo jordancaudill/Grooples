@@ -34,6 +34,7 @@ public class PlayerController : NetworkBehaviour
 
     [Header("Ground Check")]
     public float groundCheckDistance = 0.1f;
+    public float groundCheckWidth = 0.2f;
     public LayerMask groundLayer;
 
     public struct ReplicateData : IReplicateData
@@ -112,8 +113,24 @@ public class PlayerController : NetworkBehaviour
         Vector2 position = rb.position;
         Vector2 direction = Vector2.down;
         RaycastHit2D hit = Physics2D.Raycast(position, direction, groundCheckDistance, groundLayer);
+        RaycastHit2D hitLeft = Physics2D.Raycast(position + Vector2.left * groundCheckWidth, direction, groundCheckDistance, groundLayer);
+        RaycastHit2D hitRight = Physics2D.Raycast(position + Vector2.right * groundCheckWidth, direction, groundCheckDistance, groundLayer);
+        Debug.DrawRay(position, direction * groundCheckDistance, Color.red);
+        Debug.DrawRay(position + Vector2.left * groundCheckWidth, direction * groundCheckDistance, Color.red);
+        Debug.DrawRay(position + Vector2.right * groundCheckWidth, direction * groundCheckDistance, Color.red);
+
+        return hit.collider != null || hitLeft.collider != null || hitRight.collider != null; 
+    }
+
+    private bool IsCoreGrounded()
+    {
+        Vector2 position = rb.position;
+        Vector2 direction = Vector2.down;
+        RaycastHit2D hit = Physics2D.Raycast(position, direction, groundCheckDistance, groundLayer);
+
         return hit.collider != null;
     }
+
 
     public struct ReconcileData : IReconcileData
     {
@@ -287,8 +304,7 @@ public class PlayerController : NetworkBehaviour
         {
             if (localGrappleObject == null)
             {
-                bool isGrounded = IsGrounded();
-                if (isGrounded)
+                if (IsGrounded())
                 {
                     Vector2 currentVelocity = rb.linearVelocity;
                     currentVelocity.x = data.Move.x * playerMovement.moveSpeed;

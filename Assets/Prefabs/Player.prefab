@@ -776,7 +776,8 @@ MonoBehaviour:
   rb: {fileID: 5989748641023836935}
   tongue: {fileID: 3451043250967181955}
   springJoint2D: {fileID: 1848247816056139402}
-  groundCheckDistance: 1
+  groundCheckDistance: 0.6
+  groundCheckWidth: 0.4
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
@@ -1046,7 +1047,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 5
+  <PrefabId>k__BackingField: 6
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 7807759643866311769
   <SceneId>k__BackingField: 0
