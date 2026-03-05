@@ -304,7 +304,8 @@ public class PlayerController : NetworkBehaviour
                 if (grounded)
                 {
                     Vector2 currentVelocity = rb.linearVelocity;
-                    currentVelocity.x = data.Move.x * playerMovement.moveSpeed;
+                    float targetX = data.Move.x * playerMovement.moveSpeed;
+                    currentVelocity.x = Mathf.MoveTowards(currentVelocity.x, targetX, playerMovement.groundAcceleration * (float)TimeManager.TickDelta);
                     PredictionRigidbody.Velocity(currentVelocity);
                 }
                 else
@@ -326,7 +327,7 @@ public class PlayerController : NetworkBehaviour
         else if (localGrappleObject == null && grounded)
         {
             Vector2 currentVelocity = rb.linearVelocity;
-            currentVelocity.x = 0;
+            currentVelocity.x = Mathf.MoveTowards(currentVelocity.x, 0f, playerMovement.groundDeceleration * (float)TimeManager.TickDelta);
             PredictionRigidbody.Velocity(currentVelocity);
         }
 
