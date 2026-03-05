@@ -22,6 +22,7 @@ public class PlayerController : NetworkBehaviour
     private bool localJump = false;
     private bool localStartGrapple = false;
     private bool localStopGrapple = false;
+    private bool _hasDoubleJumped = false;
     private MultiplayerManager multiplayerManager;
     private SceneManager sceneManager;
 
@@ -122,16 +123,6 @@ public class PlayerController : NetworkBehaviour
         return hit.collider != null || hitLeft.collider != null || hitRight.collider != null; 
     }
 
-    private bool IsCoreGrounded()
-    {
-        Vector2 position = rb.position;
-        Vector2 direction = Vector2.down;
-        RaycastHit2D hit = Physics2D.Raycast(position, direction, groundCheckDistance, groundLayer);
-
-        return hit.collider != null;
-    }
-
-
     public struct ReconcileData : IReconcileData
     {
         //PredictionRigidbody is used to synchronize rigidbody states
@@ -140,11 +131,13 @@ public class PlayerController : NetworkBehaviour
         //transform properties, pending velocities and more are automatically
         //handled with PredictionRigidbody.
         public PredictionRigidbody2D PredictionRigidbody;
+        public bool HasDoubleJumped;
 
-        public ReconcileData(PredictionRigidbody2D pr)
+        public ReconcileData(PredictionRigidbody2D pr, bool hasDoubleJumped)
             : this()
         {
             PredictionRigidbody = pr;
+            HasDoubleJumped = hasDoubleJumped;
         }
 
         private uint _tick;
@@ -300,11 +293,15 @@ public class PlayerController : NetworkBehaviour
             playerMovement.teleport = Vector2.zero;
         }
 
+        bool grounded = IsGrounded();
+        if (grounded)
+            _hasDoubleJumped = false;
+
         if (data.Move != Vector2.zero)
         {
             if (localGrappleObject == null)
             {
-                if (IsGrounded())
+                if (grounded)
                 {
                     Vector2 currentVelocity = rb.linearVelocity;
                     currentVelocity.x = data.Move.x * playerMovement.moveSpeed;
@@ -326,7 +323,7 @@ public class PlayerController : NetworkBehaviour
                 );
             }
         }
-        else if (localGrappleObject == null && IsGrounded())
+        else if (localGrappleObject == null && grounded)
         {
             Vector2 currentVelocity = rb.linearVelocity;
             currentVelocity.x = 0;
@@ -341,12 +338,24 @@ public class PlayerController : NetworkBehaviour
         //     );
         // }
 
-        if (data.Jump && IsGrounded())
+        if (data.Jump)
         {
-            PredictionRigidbody.AddForce(
-                Vector2.up * playerMovement.popupForce,
-                ForceMode2D.Impulse
-            );
+            if (grounded)
+            {
+                PredictionRigidbody.AddForce(
+                    Vector2.up * playerMovement.popupForce,
+                    ForceMode2D.Impulse
+                );
+            }
+            else if (!_hasDoubleJumped)
+            {
+                _hasDoubleJumped = true;
+                PredictionRigidbody.Velocity(new Vector2(rb.linearVelocity.x, 0)); // reset vertical velocity before double jump
+                PredictionRigidbody.AddForce(
+                    Vector2.up * playerMovement.popupForce,
+                    ForceMode2D.Impulse
+                );
+            }
         }
 
         if (localGrappleObject == null && data.GrappleObjectId != 0)
@@ -419,7 +428,7 @@ public class PlayerController : NetworkBehaviour
         //PredictionRigidbody field in the reconcile data is an easy
         //way to accomplish this. More advanced states may require other
         //values to be sent; this will be covered later on.
-        ReconcileData rd = new ReconcileData(PredictionRigidbody);
+        ReconcileData rd = new ReconcileData(PredictionRigidbody, _hasDoubleJumped);
         //Like with the replicate you could specify a channel here, though
         //it's unlikely you ever would with a reconcile.
         ReconcileState(rd);
@@ -431,6 +440,7 @@ public class PlayerController : NetworkBehaviour
         //Call reconcile on your PredictionRigidbody field passing in
         //values from data.
         PredictionRigidbody.Reconcile(data.PredictionRigidbody);
+        _hasDoubleJumped = data.HasDoubleJumped;
     }
 
     private void SetPlayerColor()
